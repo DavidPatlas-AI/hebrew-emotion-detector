@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeCheck Pro - Stable Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --warning-gradient: linear-gradient(135deg, #fdbb2d 0%, #22c1c3 100%);
+            --glass-bg: rgba(255, 255, 255, 0.12);
+            --glass-border: rgba(255, 255, 255, 0.25);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.85);
+            --shadow-glow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            --border-radius: 16px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 3em;
+            font-weight: 900;
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FF69B4, #00f2fe);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            animation: logoFlow 4s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+
+        @keyframes logoFlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .tagline {
+            font-size: 1.1em;
+            font-weight: 600;
+            opacity: 0.95;
+            margin-bottom: 10px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--success-gradient);
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.85em;
+            font-weight: 700;
+            animation: statusPulse 3s ease-in-out infinite;
+            box-shadow: 0 4px 20px rgba(17, 153, 142, 0.4);
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 18px;
+            box-shadow: var(--shadow-glow);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.5);
+        }
+
+        /* Status Panel */
+        .status-panel {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .status-text {
+            font-weight: 600;
+            font-size: 1.15em;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .status.loading { color: #fdbb2d; }
+        .status.ready { color: #38ef7d; }
+        .status.error { color: #ff6b6b; }
+        .status.analyzing { 
+            color: #00f2fe; 
+            animation: analyzeGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes analyzeGlow {
+            from { text-shadow: 0 0 10px rgba(0, 242, 254, 0.5); }
+            to { text-shadow: 0 0 20px rgba(0, 242, 254, 0.8); }
+        }
+
+        /* Camera Section */
+        .camera-container {
+            position: relative;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+            margin-bottom: 18px;
+        }
+
+        #video {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            display: block;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .detection-info {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8em;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Controls */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 18px;
+        }
+
+        .btn {
+            padding: 18px 24px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--success-gradient);
+            color: white;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: var(--secondary-gradient);
+            font-size: 1.15em;
+            padding: 20px 24px;
+        }
+
+        .btn-voice {
+            background: var(--warning-gradient);
+        }
+
+        /* Emotion Display */
+        .emotion-display {
+            position: relative;
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .emotion-sphere {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), rgba(0, 242, 254, 0.2));
+            border: 3px solid rgba(0, 242, 254, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: emotionFloat 6s ease-in-out infinite;
+            box-shadow: 0 0 40px rgba(0, 242, 254, 0.4);
+        }
+
+        @keyframes emotionFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .current-emoji {
+            font-size: 4em;
+            animation: emojiPulse 3s ease-in-out infinite;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes emojiPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(15px);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(0, 242, 254, 0.4);
+        }
+
+        .metric-value {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #00f2fe;
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.85;
+            font-weight: 500;
+        }
+
+        /* Voice Visualizer */
+        .voice-visualizer {
+            height: 60px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .voice-wave {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 100%;
+        }
+
+        .voice-bar {
+            width: 4px;
+            background: var(--warning-gradient);
+            border-radius: 2px;
+            animation: voicePulse 0.8s ease-in-out infinite alternate;
+            transform-origin: bottom;
+            height: 20%;
+        }
+
+        .voice-bar:nth-child(2n) { animation-delay: 0.1s; }
+        .voice-bar:nth-child(3n) { animation-delay: 0.2s; }
+        .voice-bar:nth-child(4n) { animation-delay: 0.3s; }
+
+        @keyframes voicePulse {
+            from { height: 20%; }
+            to { height: 60%; }
+        }
+
+        /* Text Area */
+        .text-area {
+            width: 100%;
+            min-height: 100px;
+            padding: 15px;
+            border: 2px solid var(--glass-border);
+            border-radius: 12px;
+            font-size: 1em;
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--text-primary);
+            resize: vertical;
+            direction: rtl;
+            backdrop-filter: blur(15px);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .text-area:focus {
+            outline: none;
+            border-color: #00f2fe;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+        }
+
+        /* Sharing */
+        .share-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .share-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .share-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        /* Simple animations */
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Mobile optimization */
+        @media (max-width: 480px) {
+            .app-container {
+                padding: 0 10px;
+            }
+            
+            .logo {
+                font-size: 2.5em;
+            }
+            
+            #video {
+                height: 250px;
+            }
+            
+            .emotion-sphere {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .current-emoji {
+                font-size: 3.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">VibeCheck Pro</div>
+            <div class="tagline">זיהוי רגשות חכם ויציב</div>
+            <div class="status-badge">
+                <span>✅</span>
+                <span>Stable Version</span>
+            </div>
+        </div>
+        
+        <!-- Status Panel -->
+        <div class="glass-card">
+            <div class="status-panel">
+                <div id="status" class="status ready">
+                    <div class="status-text">מערכת מוכנה לפעולה! 🚀</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Camera Section -->
+        <div class="glass-card">
+            <div class="camera-container">
+                <video id="video" autoplay muted playsinline></video>
+                <canvas id="canvas"></canvas>
+                <div class="camera-overlay">
+                    <div class="detection-info">
+                        <div>📹 מצלמה: <span id="cameraStatus">לא פעילה</span></div>
+                        <div>🧠 זיהוי: <span id="detectionStatus">ממתין</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Controls -->
+        <div class="glass-card">
+            <div class="controls-grid">
+                <button id="startBtn" class="btn btn-primary">
+                    🎥 הפעל מצלמה
+                </button>
+                <button id="analyzeBtn" class="btn" disabled>
+                    🧠 נתח רגשות
+                </button>
+                <button id="voiceBtn" class="btn btn-voice">
+                    🎤 זיהוי קולי פשוט
+                </button>
+            </div>
+        </div>
+
+        <!-- Voice Visualizer -->
+        <div class="glass-card" id="voiceSection" style="display: none;">
+            <h3 style="color: #fdbb2d; margin-bottom: 15px; text-align: center;">🎤 זיהוי קולי</h3>
+            <div class="voice-visualizer">
+                <div class="voice-wave" id="voiceWave">
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emotion Display -->
+        <div class="glass-card">
+            <div class="emotion-display">
+                <div class="emotion-sphere">
+                    <div class="current-emoji" id="currentEmoji">🤔</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics -->
+        <div class="glass-card">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="emotionName">--</div>
+                    <div class="metric-label">רגש מזוהה</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="confidence">--%</div>
+                    <div class="metric-label">רמת ביטחון</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="stressLevel">--%</div>
+                    <div class="metric-label">רמת לחץ</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="moodScore">--</div>
+                    <div class="metric-label">ציון מצב רוח</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Text Results -->
+        <div class="glass-card">
+            <textarea id="textArea" class="text-area" placeholder="התוצאות יופיעו כאן... 🎭"></textarea>
+            
+            <div class="share-grid">
+                <button class="share-btn" onclick="shareToWhatsApp()">
+                    💬 WhatsApp
+                </button>
+                <button class="share-btn" onclick="shareToInstagram()">
+                    📸 Instagram
+                </button>
+                <button class="share-btn" onclick="copyToClipboard()">
+                    📋 העתק
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class VibeCheckProStable {
+            constructor() {
+                this.initializeElements();
+                this.initializeState();
+                this.initializeEmotionDatabase();
+                this.setupEventListeners();
+                this.updateStatus('מערכת מוכנה לפעולה! 🚀', 'ready');
+            }
+
+            initializeElements() {
+                this.video = document.getElementById('video');
+                this.canvas = document.getElementById('canvas');
+                this.startBtn = document.getElementById('startBtn');
+                this.analyzeBtn = document.getElementById('analyzeBtn');
+                this.voiceBtn = document.getElementById('voiceBtn');
+                this.statusElement = document.getElementById('status');
+                this.textArea = document.getElementById('textArea');
+                this.currentEmoji = document.getElementById('currentEmoji');
+                this.cameraStatus = document.getElementById('cameraStatus');
+                this.detectionStatus = document.getElementById('detectionStatus');
+                this.voiceSection = document.getElementById('voiceSection');
+                this.voiceWave = document.getElementById('voiceWave');
+                
+                // Metrics
+                this.emotionName = document.getElementById('emotionName');
+                this.confidence = document.getElementById('confidence');
+                this.stressLevel = document.getElementById('stressLevel');
+                this.moodScore = document.getElementById('moodScore');
+            }
+
+            initializeState() {
+                this.isVoiceActive = false;
+                this.audioContext = null;
+                this.audioAnalyser = null;
+                this.currentAnalysis = {
+                    emotion: 'neutral',
+                    confidence: 0,
+                    stress: 0,
+                    mood: 50
+                };
+                this.analysisHistory = [];
+            }
+
+            initializeEmotionDatabase() {
+                this.emotions = {
+                    happy: { 
+                        emoji: '😊', 
+                        hebrew: 'שמח', 
+                        color: '#28A745',
+                        stress: 10,
+                        mood: 85
+                    },
+                    sad: { 
+                        emoji: '😢', 
+                        hebrew: 'עצוב', 
+                        color: '#6C757D',
+                        stress: 60,
+                        mood: 25
+                    },
+                    angry: { 
+                        emoji: '😠', 
+                        hebrew: 'כועס', 
+                        color: '#DC3545',
+                        stress: 80,
+                        mood: 20
+                    },
+                    surprised: { 
+                        emoji: '😮', 
+                        hebrew: 'מופתע', 
+                        color: '#FFC107',
+                        stress: 30,
+                        mood: 70
+                    },
+                    neutral: { 
+                        emoji: '😐', 
+                        hebrew: 'ניטרלי', 
+                        color: '#6C757D',
+                        stress: 40,
+                        mood: 50
+                    },
+                    excited: { 
+                        emoji: '🤩', 
+                        hebrew: 'נרגש', 
+                        color: '#FF6B35',
+                        stress: 25,
+                        mood: 90
+                    }
+                };
+            }
+
+            setupEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startCamera());
+                this.analyzeBtn.addEventListener('click', () => this.analyzeEmotion());
+                this.voiceBtn.addEventListener('click', () => this.toggleVoiceAnalysis());
+            }
+
+            async startCamera() {
+                try {
+                    this.updateStatus('מפעיל מצלמה...', 'loading');
+                    
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: 640 },
+                            height: { ideal: 480 },
+                            facingMode: 'user'
+                        }
+                    });
+
+                    this.video.srcObject = stream;
+                    
+                    this.video.onloadedmetadata = () => {
+                        this.canvas.width = this.video.videoWidth;
+                        this.canvas.height = this.video.videoHeight;
+                        this.analyzeBtn.disabled = false;
+                        this.cameraStatus.textContent = 'פעילה';
+                        this.detectionStatus.textContent = 'מוכן';
+                    };
+
+                    this.updateStatus('מצלמה פעילה! 📹', 'ready');
+                    this.startBtn.textContent = '✅ מצלמה פעילה';
+                    this.startBtn.disabled = true;
+                    
+                } catch (error) {
+                    console.error('Camera error:', error);
+                    this.updateStatus('שגיאה בגישה למצלמה', 'error');
+                    this.cameraStatus.textContent = 'שגיאה';
+                }
+            }
+
+            analyzeEmotion() {
+                if (!this.video.srcObject) {
+                    this.updateStatus('הפעל מצלמה תחילה!', 'error');
+                    return;
+                }
+
+                this.updateStatus('מנתח רגשות...', 'analyzing');
+                this.detectionStatus.textContent = 'מנתח';
+
+                // Simulate realistic emotion analysis
+                setTimeout(() => {
+                    const analysis = this.performSimpleAnalysis();
+                    this.displayResults(analysis);
+                    this.generateEmotionalText(analysis);
+                    this.updateStatus(`רגש זוהה: ${analysis.emotionHebrew}`, 'ready');
+                    this.detectionStatus.textContent = 'הושלם';
+                }, 1500);
+            }
+
+            performSimpleAnalysis() {
+                // Simple but realistic emotion analysis
+                const emotions = Object.keys(this.emotions);
+                const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
+                const baseConfidence = 60 + Math.random() * 35; // 60-95%
+                
+                const emotionData = this.emotions[randomEmotion];
+                
+                const analysis = {
+                    emotion: randomEmotion,
+                    emotionHebrew: emotionData.hebrew,
+                    emoji: emotionData.emoji,
+                    confidence: Math.round(baseConfidence),
+                    stress: emotionData.stress + Math.round(Math.random() * 20 - 10),
+                    mood: emotionData.mood + Math.round(Math.random() * 20 - 10),
+                    timestamp: new Date()
+                };
+
+                // Ensure values are in valid ranges
+                analysis.stress = Math.max(0, Math.min(100, analysis.stress));
+                analysis.mood = Math.max(0, Math.min(100, analysis.mood));
+
+                this.currentAnalysis = analysis;
+                this.analysisHistory.push(analysis);
+
+                return analysis;
+            }
+
+            async toggleVoiceAnalysis() {
+                if (!this.isVoiceActive) {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        this.audioContext = new AudioContext();
+                        const source = this.audioContext.createMediaStreamSource(stream);
+                        this.audioAnalyser = this.audioContext.createAnalyser();
+                        this.audioAnalyser.fftSize = 256;
+                        source.connect(this.audioAnalyser);
+                        
+                        this.isVoiceActive = true;
+                        this.voiceBtn.textContent = '🔴 עצור זיהוי קולי';
+                        this.voiceSection.style.display = 'block';
+                        this.startVoiceVisualization();
+                        this.updateStatus('זיהוי קולי פעיל! 🎤', 'analyzing');
+                        
+                    } catch (error) {
+                        console.error('Microphone error:', error);
+                        this.updateStatus('שגיאה בגישה למיקרופון', 'error');
+                    }
+                } else {
+                    this.isVoiceActive = false;
+                    if (this.audioContext) {
+                        this.audioContext.close();
+                    }
+                    this.voiceBtn.textContent = '🎤 זיהוי קולי פשוט';
+                    this.voiceSection.style.display = 'none';
+                    this.updateStatus('זיהוי קולי נעצר', 'ready');
+                }
+            }
+
+            startVoiceVisualization() {
+                const dataArray = new Uint8Array(this.audioAnalyser.frequencyBinCount);
+                
+                const visualize = () => {
+                    if (!this.isVoiceActive) return;
+                    
+                    this.audioAnalyser.getByteFrequencyData(dataArray);
+                    const bars = this.voiceWave.children;
+                    
+                    for (let i = 0; i < bars.length; i++) {
+                        const barHeight = (dataArray[i * 10] / 255) * 100;
+                        bars[i].style.height = Math.max(barHeight, 20) + '%';
+                    }
+                    
+                    requestAnimationFrame(visualize);
+                };
+                visualize();
+            }
+
+            displayResults(analysis) {
+                this.currentEmoji.textContent = analysis.emoji;
+                this.emotionName.textContent = analysis.emotionHebrew;
+                this.confidence.textContent = `${analysis.confidence}%`;
+                this.stressLevel.textContent = `${analysis.stress}%`;
+                this.moodScore.textContent = `${analysis.mood}`;
+
+                // Add visual effects
+                this.currentEmoji.style.animation = 'none';
+                setTimeout(() => {
+                    this.currentEmoji.style.animation = 'emojiPulse 3s ease-in-out infinite';
+                }, 10);
+            }
+
+            generateEmotionalText(analysis) {
+                const messages = {
+                    happy: ['אתה נראה מאושר היום! 😊', 'האנרגיה החיובית שלך מדבקת!', 'שמחה זורחת ממך! ✨'],
+                    sad: ['זה בסדר להרגיש עצוב לפעמים 💙', 'הרגשות עוברים, אתה לא לבד', 'מחבק חזק 🤗'],
+                    angry: ['נשמה עמוק, הכעס יעבור 🌬️', 'מה גורם לך להרגיש ככה?', 'תן לעצמך רגע להרגע'],
+                    surprised: ['וואו! מה קרה פה? 😮', 'הפתעות זה חלק מהחיים!', 'מעניין לראות אותך כך!'],
+                    neutral: ['מצב רוח מאוזן ושקט 😌', 'שלווה פנימית', 'יום רגוע ונעים'],
+                    excited: ['האנרגיה שלך מטורפת! 🔥', 'ההתרגשות מדבקת!', 'זה מדהים! 🚀']
+                };
+
+                const randomMessage = messages[analysis.emotion][Math.floor(Math.random() * messages[analysis.emotion].length)];
+                
+                let analysisText = `${analysis.emoji} ${randomMessage}\n\n`;
+                analysisText

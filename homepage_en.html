@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Recognition - Patlas Innovation Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rubik', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Language Switch Bar */
+        .language-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px 0;
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .language-btn {
+            background: none;
+            border: 2px solid #00aaff;
+            color: #00aaff;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .language-btn:hover, .language-btn.active {
+            background: #00aaff;
+            color: white;
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            position: fixed;
+            top: 60px;
+            left: 20px;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(45deg, #00aaff, #0088cc);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0, 170, 255, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 170, 255, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+
+        .header {
+            text-align: center;
+            padding: 100px 0 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            margin: 20px 0 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .project-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #4ecdc4;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .sections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .section-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .section-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .section-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #4ecdc4;
+        }
+
+        .section-description {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .project-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .project-link {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .project-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+
+        .whatsapp-btn {
+            background: #25D366;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .whatsapp-btn:hover {
+            background: #128C7E;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .nav-buttons {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .sections-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Language Switch Bar -->
+    <div class="language-bar">
+        <button class="language-btn" onclick="window.location.href='homepage.html'">עברית</button>
+        <button class="language-btn active" onclick="window.location.href='homepage_en.html'">English</button>
+        <button class="language-btn" onclick="window.location.href='homepage_ru.html'">Русский</button>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="nav-buttons">
+        <a href="../index_en.html" class="nav-btn">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="../adhd_home_en.html" class="nav-btn">
+            <i class="fas fa-brain"></i>
+            <span>ADHD Hub</span>
+        </a>
+        <a href="../project_gallery_en.html" class="nav-btn">
+            <i class="fas fa-th-large"></i>
+            <span>Gallery</span>
+        </a>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>😊 Emotion Recognition</h1>
+            <p>Advanced system for emotion recognition through camera. Includes therapeutic versions, research, and advanced tools for emotional analysis. Perfect for therapy, research, and personal development.</p>
+            
+            <div class="project-stats">
+                <div class="stat-card">
+                    <div class="stat-number">15+</div>
+                    <div class="stat-label">Different Versions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Therapeutic Tools</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">Advanced Research</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Accurate Detection</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sections-grid">
+            <!-- Main Tool -->
+            <div class="section-card">
+                <span class="section-icon">📷</span>
+                <div class="section-title">Main Tool</div>
+                <div class="section-description">
+                    The main tool for emotion recognition through camera. Includes real-time detection, advanced analysis, and user-friendly interface.
+                </div>
+                <div class="project-links">
+                    <a href="emoji_camera_tool.html" class="project-link" target="_blank">
+                        <i class="fas fa-play"></i>
+                        Launch Tool
+                    </a>
+                    <a href="https://wa.me/972547923366?text=Hi David! I'm interested in the main emotion recognition tool - the main tool for emotion recognition through camera. I'd love to hear more details!" class="whatsapp-btn" target="_blank">
+                        <i class="fab fa-whatsapp"></i>
+                        Ask about Tool
+                    </a>
+                </div>
+            </div>
+
+            <!-- Therapeutic Versions -->
+            <div class="section-card">
+                <span class="section-icon">🧠</span>
+                <div class="section-title">Therapeutic Versions</div>
+                <div class="section-description">
+                    Special tools for therapy, support groups, and self-monitoring. Includes therapist dashboard and patient tools.
+                </div>
+                <div class="project-links">
+                    <a href="גרסאות טיפוליות/" class="project-link" target="_blank">
+                        <i class="fas fa-folder"></i>
+                        Open Versions
+                    </a>
+                    <a href="https://wa.me/972547923366?text=Hi David! I'm interested in the therapeutic versions of emotion recognition - special tools for therapy and support groups. I'd love to hear more details!" class="whatsapp-btn" target="_blank">
+                        <i class="fab fa-whatsapp"></i>
+                        Ask about Therapy
+                    </a>
+                </div>
+            </div>
+
+            <!-- Research & Development -->
+            <div class="section-card">
+                <span class="section-icon">🔬</span>
+                <div class="section-title">Research & Development</div>
+                <div class="section-description">
+                    Advanced research, new tools, and future developments. Includes data, analytics, and new ideas.
+                </div>
+                <div class="project-links">
+                    <a href="מחקרים ופיתוחים חדשים/" class="project-link" target="_blank">
+                        <i class="fas fa-microscope"></i>
+                        Open Research
+                    </a>
+                    <a href="https://wa.me/972547923366?text=Hi David! I'm interested in the research and development of emotion recognition - advanced research and new tools. I'd love to hear more details!" class="whatsapp-btn" target="_blank">
+                        <i class="fab fa-whatsapp"></i>
+                        Ask about Research
+                    </a>
+                </div>
+            </div>
+
+            <!-- Gallery & Versions -->
+            <div class="section-card">
+                <span class="section-icon">🖼️</span>
+                <div class="section-title">Gallery & Versions</div>
+                <div class="section-description">
+                    Gallery of all versions, including old versions, additional versions, and research. Comprehensive view of the entire project.
+                </div>
+                <div class="project-links">
+                    <a href="gallery-versions.html" class="project-link" target="_blank">
+                        <i class="fas fa-images"></i>
+                        Open Gallery
+                    </a>
+                    <a href="https://wa.me/972547923366?text=Hi David! I'm interested in the gallery and versions of emotion recognition - comprehensive gallery of all versions and research. I'd love to hear more details!" class="whatsapp-btn" target="_blank">
+                        <i class="fab fa-whatsapp"></i>
+                        Ask about Gallery
+                    </a>
+                </div>
+            </div>
+
+            <!-- Documentation -->
+            <div class="section-card">
+                <span class="section-icon">📚</span>
+                <div class="section-title">Documentation & Guides</div>
+                <div class="section-description">
+                    Detailed documentation, usage guides, README, and technical documents. Everything you need to know about the project.
+                </div>
+                <div class="project-links">
+                    <a href="README.md" class="project-link" target="_blank">
+                        <i class="fas fa-book"></i>
+                        Open Documentation
+                    </a>
+                    <a href="https://wa.me/972547923366?text=Hi David! I'm interested in the documentation and guides of emotion recognition - detailed documentation and usage guides. I'd love to hear more details!" class="whatsapp-btn" target="_blank">
+                        <i class="fab fa-whatsapp"></i>
+                        Ask about Documentation
+                    </a>
+                </div>
+            </div>
+
+            <!-- Assets & Resources -->
+            <div class="section-card">
+                <span class="section-icon">📁</span>
+                <div class="section-title">Files & Resources</div>
+                <div class="section-description">
+                    All files, CSS, JavaScript, and project resources. Including archive of old versions.
+                </div>
+                <div class="project-links">
+                    <a href="assets/" class="project-link" target="_blank">
+                        <i class="fas fa-folder-open"></i>
+                        Open Files
+                    </a>
+                    <a href="https://wa.me/972547923366?text=Hi David! I'm interested in the files and resources of emotion recognition - all files and resources of the project. I'd love to hear more details!" class="whatsapp-btn" target="_blank">
+                        <i class="fab fa-whatsapp"></i>
+                        Ask about Files
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add some interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate cards on scroll
+            const cards = document.querySelectorAll('.section-card');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            cards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(50px)';
+                card.style.transition = 'all 0.6s ease';
+                observer.observe(card);
+            });
+        });
+    </script>
+</body>
+</html> 

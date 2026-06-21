@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeCheck Pro 2025 - מערכת זיהוי רגשות מתקדמת</title>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/animations.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">🎭</div>
+            <div class="loading-text">VibeCheck Pro 2025</div>
+            <div class="loading-subtitle">מערכת זיהוי רגשות מתקדמת</div>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+            <div class="loading-status">מאתחל מערכת AI...</div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-icon">🎭</span>
+                <span class="logo-text">VibeCheck Pro</span>
+            </div>
+            <div class="nav-actions">
+                <button id="homeBtn" class="nav-btn home-btn" title="דף הבית">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">דף הבית</span>
+                </button>
+                <button id="versionsBtn" class="nav-btn versions-btn" title="גרסאות טיפוליות">
+                    <span class="nav-icon">🏥</span>
+                    <span class="nav-text">גרסאות טיפוליות</span>
+                </button>
+                <button id="testBtn" class="nav-btn test-btn" title="דף בדיקה מהיר">
+                    <span class="nav-icon">🧪</span>
+                    <span class="nav-text">בדיקה</span>
+                </button>
+            </div>
+            <div class="nav-links">
+                <button class="nav-link active" data-page="scanner" title="סריקת רגשות">
+                    <span class="nav-icon">📹</span>
+                    <span class="nav-text">סריקה</span>
+                </button>
+                <button class="nav-link" data-page="voice" title="ניתוח קול">
+                    <span class="nav-icon">🎤</span>
+                    <span class="nav-text">קול</span>
+                </button>
+                <button class="nav-link" data-page="analysis" title="ניתוח מתקדם">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">ניתוח</span>
+                </button>
+                <button class="nav-link" data-page="content" title="עוזר תוכן">
+                    <span class="nav-icon">✨</span>
+                    <span class="nav-text">תוכן</span>
+                </button>
+                <button class="nav-link" data-page="gallery" title="גלריה">
+                    <span class="nav-icon">🖼️</span>
+                    <span class="nav-text">גלריה</span>
+                </button>
+                <button class="nav-link" data-page="settings" title="הגדרות">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">הגדרות</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Emotion Scanner Page -->
+        <section id="scannerPage" class="page active">
+            <div class="page-header">
+                <h1 class="page-title">📹 סריקת רגשות בזמן אמת</h1>
+                <p class="page-subtitle">זיהוי וניתוח רגשות באמצעות מצלמה מתקדמת</p>
+            </div>
+
+            <div class="page-content">
+                <!-- Camera Container -->
+                <div class="camera-container">
+                    <div class="camera-wrapper">
+                        <video id="videoElement" autoplay muted playsinline></video>
+                        <canvas id="canvasElement"></canvas>
+                        <div id="faceOverlay" class="face-overlay"></div>
+                        <div class="camera-controls">
+                            <button id="startCamera" class="btn btn-primary">📹 הפעל מצלמה</button>
+                            <button id="capturePhoto" class="btn btn-secondary" disabled>📸 צלם</button>
+                            <button id="toggleMicrophone" class="btn btn-secondary">🎤 הפעל מיקרופון</button>
+                            <button id="recordVideo" class="btn btn-secondary" disabled>⏺️ הקלט וידאו</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Enhanced Media Display -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0;">
+                        <div style="text-align: center;">
+                            <div id="mainAudioVisualizer" style="display: flex; justify-content: center; align-items: end; height: 60px; gap: 2px; background: rgba(0,0,0,0.1); border-radius: 10px; padding: 10px; margin: 10px 0;">
+                                <!-- Audio bars will be generated here -->
+                            </div>
+                            <div style="font-weight: bold;">🎵 ויזואליזר קול</div>
+                            <div id="mainVoiceMetrics" style="font-size: 0.9em; color: #666;">עוצמה: <span id="mainVoiceLevel">0%</span> | בהירות: <span id="mainVoiceClarity">0%</span></div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div id="mainEmotionMirror" style="width: 100%; height: 120px; background: linear-gradient(45deg, #4ECDC4, #44A08D); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 3em; margin: 10px 0;">
+                                🤔
+                            </div>
+                            <div style="font-weight: bold;">🎭 מצב רוח נוכחי</div>
+                            <div id="mainEmotionDescription" style="font-size: 0.9em; color: #666;">מחכה לניתוח...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Status Display -->
+                    <div class="status-display">
+                        <div class="status-icon">🤖</div>
+                        <div class="status-text" id="systemStatus">מערכת מוכנה</div>
+                        <div class="status-progress">
+                            <div id="statusProgress" class="progress-bar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis Panel -->
+                <div class="analysis-panel">
+                    <div class="emotion-display">
+                        <div class="current-emotion">
+                            <div class="emotion-icon" id="currentEmotion">🤔</div>
+                            <div class="emotion-info">
+                                <div class="emotion-name" id="emotionName">מחכה לניתוח</div>
+                                <div class="emotion-details">
+                                    <span class="confidence">ביטחון: <span id="confidenceText">0%</span></span>
+                                    <span class="authenticity">אמינות: <span id="authenticityLevel">0%</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">רמת לחץ</div>
+                            <div class="metric-value" id="stressLevel">0%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">אנרגיה חברתית</div>
+                            <div class="battery-display">
+                                <div class="battery-container">
+                                    <div id="batteryFill" class="battery-fill"></div>
+                                </div>
+                                <div id="batteryText" class="battery-text">טוען...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button id="analyzeNow" class="btn btn-analyze">🧠 נתח עכשיו</button>
+                        <button id="continuousMode" class="btn btn-continuous">🔄 מצב ניטור רציף</button>
+                    </div>
+                </div>
+
+                <!-- Text Editor -->
+                <div class="text-editor-section">
+                    <h3>📝 תוכן מועשר</h3>
+                    <div class="text-editor-container">
+                        <textarea id="textEditor" placeholder="הטקסט שלך עם סמיילים מתאימים יופיע כאן..."></textarea>
+                        <div class="editor-actions">
+                            <button id="clearText" class="btn btn-small">🗑️ נקה</button>
+                            <button id="shareText" class="btn btn-small">📤 שתף</button>
+                            <button id="copyText" class="btn btn-small">📋 העתק</button>
+                        </div>
+                        
+                        <!-- סטטוס מערכת -->
+                        <div id="systemStatus"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Voice Analysis Page -->
+        <section id="voicePage" class="page">
+            <div class="page-header">
+                <h1 class="page-title">🎤 ניתוח קול ורגשות</h1>
+                <p class="page-subtitle">זיהוי רגשות באמצעות ניתוח קולי מתקדם</p>
+            </div>
+
+            <div class="page-content">
+                <!-- Voice Analyzer -->
+                <div class="voice-analyzer-container">
+                    <div class="voice-visualizer-card">
+                        <h3>📊 ויזואליזציה קולית</h3>
+                        <div id="voiceVisualizer" class="voice-visualizer">
+                            <div class="voice-bar"></div>
+                            <div class="voice-bar"></div>
+                            <div class="voice-bar"></div>
+                            <div class="voice-bar"></div>
+                            <div class="voice-bar"></div>
+                            <div class="voice-bar"></div>
+                            <div class="voice-bar"></div>
+                            <div class="voice-bar"></div>
+                            <div class="voice-bar"></div>
+                            <div class="voice-bar"></div>
+                        </div>
+                        <div class="voice-controls">
+                            <button id="startVoiceAnalysis" class="btn btn-primary">🎤 התחל הקלטה</button>
+                            <button id="stopVoiceAnalysis" class="btn btn-danger" disabled>⏹️ עצור</button>
+                        </div>
+                    </div>
+
+                    <!-- Voice Metrics -->
+                    <div class="voice-metrics-card">
+                        <h3>📈 מדדי קול</h3>
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <span class="metric-label">גובה טון</span>
+                                <span id="voicePitch" class="metric-value">0 Hz</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">עוצמה</span>
+                                <span id="voiceVolume" class="metric-value">0%</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">אנרגיה</span>
+                                <span id="voiceEnergy" class="metric-value">0%</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">מתח</span>
+                                <span id="voiceStress" class="metric-value">0%</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">בהירות</span>
+                                <span id="voiceClarity" class="metric-value">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Voice History -->
+                    <div class="voice-history-card">
+                        <h3>📋 היסטוריית ניתוחים</h3>
+                        <div id="voiceHistory" class="voice-history-list">
+                            <div class="empty-state">
+                                <span class="empty-icon">🎙️</span>
+                                <span class="empty-text">עדיין לא בוצעו ניתוחי קול</span>
+                            </div>
+                        </div>
+                        <div class="history-actions">
+                            <button id="clearVoiceHistory" class="btn btn-small">🗑️ נקה היסטוריה</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analysis Page -->
+        <section id="analysisPage" class="page">
+            <div class="page-header">
+                <h1 class="page-title">📊 ניתוח מתקדם</h1>
+                <p class="page-subtitle">תובנות עמוקות וגרפים אינטראקטיביים</p>
+            </div>
+
+            <div class="page-content">
+                <!-- Charts Container -->
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <h3>📈 התפלגות רגשות</h3>
+                        <div id="emotionChart" class="chart-placeholder">
+                            <div class="empty-chart">
+                                <span class="chart-icon">📊</span>
+                                <span class="chart-text">מחכה לנתונים...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3>⏰ רגשות לאורך זמן</h3>
+                        <div id="timeChart" class="chart-placeholder">
+                            <div class="empty-chart">
+                                <span class="chart-icon">📈</span>
+                                <span class="chart-text">מחכה לנתונים...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Insights -->
+                <div class="insights-container">
+                    <h3>🤖 תובנות AI</h3>
+                    <div id="aiInsights" class="insights-grid">
+                        <div class="insight-card">
+                            <div class="insight-icon">💡</div>
+                            <div class="insight-content">
+                                <h4>המלצה אישית</h4>
+                                <p>מחכה לניתוח נתונים...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Content Enhancer Page -->
+        <section id="contentPage" class="page">
+            <div class="page-header">
+                <h1 class="page-title">✨ עוזר תוכן חכם</h1>
+                <p class="page-subtitle">שיפור טקסטים וצ'אטים עם AI מתקדם</p>
+            </div>
+
+            <div class="page-content">
+                <!-- Text Input -->
+                <div class="content-input-section">
+                    <h3>📝 הכנס טקסט לשיפור</h3>
+                    <div class="content-input-container">
+                        <textarea id="contentInput" placeholder="כתוב כאן את הטקסט שברצונך לשפר..."></textarea>
+                        <div class="input-controls">
+                            <select id="platformSelect" class="platform-selector">
+                                <option value="general">כללי</option>
+                                <option value="whatsapp">WhatsApp</option>
+                                <option value="instagram">Instagram</option>
+                                <option value="facebook">Facebook</option>
+                                <option value="email">אימייל</option>
+                                <option value="sms">SMS</option>
+                            </select>
+                            <button id="analyzeContent" class="btn btn-primary">🔍 נתח תוכן</button>
+                            <button id="enhanceContent" class="btn btn-secondary">✨ שפר תוכן</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis Results -->
+                <div id="contentAnalysisResults" class="content-analysis-section" style="display: none;">
+                    <h3>📊 ניתוח התוכן</h3>
+                    <div class="analysis-cards">
+                        <div class="analysis-card">
+                            <h4>🎭 טון רגשי</h4>
+                            <div id="emotionalToneResult" class="analysis-result"></div>
+                        </div>
+                        <div class="analysis-card">
+                            <h4>👥 קהל יעד</h4>
+                            <div id="audienceResult" class="analysis-result"></div>
+                        </div>
+                        <div class="analysis-card">
+                            <h4>📈 פוטנציאל engagement</h4>
+                            <div id="engagementResult" class="analysis-result"></div>
+                        </div>
+                        <div class="analysis-card">
+                            <h4>📖 קריאות</h4>
+                            <div id="readabilityResult" class="analysis-result"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Content -->
+                <div id="enhancedContentSection" class="enhanced-content-section" style="display: none;">
+                    <h3>✨ תוכן משופר</h3>
+                    <div class="enhancement-tabs">
+                        <button class="tab-btn active" data-tab="minimal">מינימלי</button>
+                        <button class="tab-btn" data-tab="balanced">מאוזן</button>
+                        <button class="tab-btn" data-tab="expressive">אקספרסיבי</button>
+                        <button class="tab-btn" data-tab="professional">מקצועי</button>
+                    </div>
+                    <div class="enhancement-content">
+                        <div id="enhancedText" class="enhanced-text-display"></div>
+                        <div class="enhancement-actions">
+                            <button id="copyEnhanced" class="btn btn-small">📋 העתק</button>
+                            <button id="shareEnhanced" class="btn btn-small">📤 שתף</button>
+                            <button id="addToText" class="btn btn-small">➕ הוסף לעורך</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Suggestions -->
+                <div id="suggestionsSection" class="suggestions-section" style="display: none;">
+                    <h3>💡 הצעות לשיפור</h3>
+                    <div id="suggestionsList" class="suggestions-list"></div>
+                </div>
+
+                <!-- Emoji Suggestions -->
+                <div id="emojiSuggestionsSection" class="emoji-suggestions-section" style="display: none;">
+                    <h3>😊 הצעות סמיילים</h3>
+                    <div id="emojiSuggestionsList" class="emoji-suggestions-list"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Gallery Page -->
+        <section id="galleryPage" class="page">
+            <div class="page-header">
+                <h1 class="page-title">🖼️ גלריית רגשות</h1>
+                <p class="page-subtitle">אוסף התמונות והניתוחים שלך</p>
+            </div>
+
+            <div class="page-content">
+                <!-- Gallery Controls -->
+                <div class="gallery-controls">
+                    <button id="takePhoto" class="btn btn-primary">📸 צלם תמונה</button>
+                    <button id="uploadPhoto" class="btn btn-secondary">📁 העלה תמונה</button>
+                    <button id="clearGallery" class="btn btn-danger">🗑️ נקה גלריה</button>
+                    <input type="file" id="photoInput" accept="image/*" style="display: none;">
+                </div>
+
+                <!-- Filter Options -->
+                <div class="gallery-filters">
+                    <select id="emotionFilter" class="filter-select">
+                        <option value="all">כל הרגשות</option>
+                        <option value="שמח">שמח</option>
+                        <option value="עצוב">עצוב</option>
+                        <option value="כועס">כועס</option>
+                        <option value="מופתע">מופתע</option>
+                        <option value="נייטרלי">נייטרלי</option>
+                    </select>
+                    <button id="toggleView" class="btn btn-small">🔄 החלף תצוגה</button>
+                </div>
+
+                <!-- Gallery Grid -->
+                <div id="galleryGrid" class="gallery-grid">
+                    <div class="empty-gallery">
+                        <span class="empty-icon">📷</span>
+                        <span class="empty-text">עדיין לא צילמת תמונות</span>
+                        <button class="btn btn-primary" onclick="document.getElementById('takePhoto').click()">📸 התחל לצלם</button>
+                    </div>
+                </div>
+
+                <!-- Gallery Stats -->
+                <div id="galleryStats" class="gallery-stats" style="display: none;">
+                    <h3>📊 סטטיסטיקות</h3>
+                    <div class="stats-grid" id="statsGrid"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Page -->
+        <section id="settingsPage" class="page">
+            <div class="page-header">
+                <h1 class="page-title">⚙️ הגדרות מערכת</h1>
+                <p class="page-subtitle">התאמה אישית של VibeCheck Pro</p>
+            </div>
+
+            <div class="page-content">
+                <div class="settings-grid">
+                    <!-- Theme Settings -->
+                    <div class="settings-card">
+                        <h3>🎨 ערכת נושא</h3>
+                        <div class="setting-item">
+                            <label>מצב תצוגה</label>
+                            <select id="themeSelect">
+                                <option value="auto">אוטומטי</option>
+                                <option value="light">בהיר</option>
+                                <option value="dark">כהה</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>צבע עיקרי</label>
+                            <input type="color" id="primaryColor" value="#4ECDC4">
+                        </div>
+                    </div>
+
+                    <!-- Analysis Settings -->
+                    <div class="settings-card">
+                        <h3>🧠 הגדרות ניתוח</h3>
+                        <div class="setting-item">
+                            <label>רגישות זיהוי</label>
+                            <input type="range" id="sensitivitySlider" min="0.3" max="0.9" step="0.1" value="0.6">
+                            <span id="sensitivityValue">60%</span>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="continuousAnalysis">
+                                ניתוח רציף
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="voiceAnalysis" checked>
+                                ניתוח קול
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Content Enhancement Settings -->
+                    <div class="settings-card">
+                        <h3>✨ הגדרות שיפור תוכן</h3>
+                        <div class="setting-item">
+                            <label>סגנון אישי</label>
+                            <select id="personalStyle">
+                                <option value="balanced">מאוזן</option>
+                                <option value="formal">רשמי</option>
+                                <option value="casual">חופשי</option>
+                                <option value="expressive">אקספרסיבי</option>
+                                <option value="minimal">מינימלי</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>רמת שיפור</label>
+                            <select id="enhancementLevel">
+                                <option value="light">קל</option>
+                                <option value="medium">בינוני</option>
+                                <option value="heavy">כבד</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Data Management -->
+                    <div class="settings-card">
+                        <h3>💾 ניהול נתונים</h3>
+                        <div class="setting-item">
+                            <button id="exportData" class="btn btn-secondary">📤 יצא נתונים</button>
+                        </div>
+                        <div class="setting-item">
+                            <button id="importData" class="btn btn-secondary">📥 יבא נתונים</button>
+                        </div>
+                        <div class="setting-item">
+                            <button id="clearAllData" class="btn btn-danger">🗑️ נקה כל הנתונים</button>
+                        </div>
+                    </div>
+
+                    <!-- System Info -->
+                    <div class="settings-card">
+                        <h3>ℹ️ מידע מערכת</h3>
+                        <div class="info-item">
+                            <span>גרסה:</span>
+                            <span>VibeCheck Pro 2025 v3.0</span>
+                        </div>
+                        <div class="info-item">
+                            <span>ביצועים:</span>
+                            <span id="performanceInfo">טוען...</span>
+                        </div>
+                        <div class="info-item">
+                            <span>נתונים:</span>
+                            <span id="dataUsage">טוען...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Modals -->
+    <div id="photoModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <img id="modalImage" class="modal-image">
+            <div class="modal-info">
+                <h3 id="modalEmotion"></h3>
+                <p id="modalDetails"></p>
+                <div class="modal-actions">
+                    <button id="modalShare" class="btn btn-primary">📤 שתף</button>
+                    <button id="modalDownload" class="btn btn-secondary">💾 שמור</button>
+                    <button id="modalDelete" class="btn btn-danger">🗑️ מחק</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/emotion-analyzer.js"></script>
+    <script src="assets/js/ai-engine.js"></script>
+    <script src="assets/js/machine-learning-engine.js"></script>
+    <script src="assets/js/advanced-analytics.js"></script>
+    <script src="assets/js/camera-manager.js"></script>
+    <script src="assets/js/emoji-picker.js"></script>
+    <script src="assets/js/voice-analyzer.js"></script>
+    <script src="assets/js/chat-emoji-assistant.js"></script>
+    <script src="assets/js/content-enhancer.js"></script>
+    <script src="assets/js/chat-integration.js"></script>
+    <script src="assets/js/browser-extension.js"></script>
+    <script src="assets/js/ui-manager.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+</html> 

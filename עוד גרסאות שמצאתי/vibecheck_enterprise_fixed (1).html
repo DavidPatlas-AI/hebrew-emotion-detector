@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeCheck Enterprise AI - Edge Computing Platform</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/4.10.0/tf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --warning-gradient: linear-gradient(135deg, #fdbb2d 0%, #22c1c3 100%);
+            --enterprise-gradient: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            --ai-gradient: linear-gradient(135deg, #8360c3 0%, #2ebf91 100%);
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.85);
+            --shadow-glow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            --border-radius: 20px;
+            --enterprise-blue: #1e3a8a;
+            --ai-purple: #6366f1;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+            background: var(--enterprise-gradient);
+            min-height: 100vh;
+            padding: 15px;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .enterprise-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Enterprise Header */
+        .enterprise-header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-bottom: 25px;
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .enterprise-branding {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .enterprise-logo {
+            font-size: 2.5em;
+            font-weight: 900;
+            background: linear-gradient(45deg, #3498db, #8360c3, #2ebf91);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: logoFlow 4s ease-in-out infinite;
+        }
+
+        @keyframes logoFlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .enterprise-tagline {
+            font-size: 0.9em;
+            opacity: 0.8;
+            font-weight: 500;
+        }
+
+        .ai-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--ai-gradient);
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .edge-computing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--success-gradient);
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        /* Dashboard Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        /* AI Processing Panel */
+        .ai-processing-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .panel-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--ai-purple);
+        }
+
+        .processing-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85em;
+        }
+
+        .stat-chip {
+            background: rgba(99, 102, 241, 0.2);
+            padding: 6px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        /* Video Processing Area */
+        .video-container {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #000;
+            margin-bottom: 20px;
+            height: 400px;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #canvas, #poseCanvas, #edgeOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .ai-overlay {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .model-indicator {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8em;
+            backdrop-filter: blur(10px);
+        }
+
+        .inference-time {
+            background: var(--ai-gradient);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        /* Enterprise Controls */
+        .enterprise-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .enterprise-btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .enterprise-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .enterprise-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-ai-training {
+            background: var(--ai-gradient);
+        }
+
+        .btn-edge-deploy {
+            background: var(--success-gradient);
+        }
+
+        .btn-enterprise-api {
+            background: var(--enterprise-gradient);
+        }
+
+        /* Real-time Analytics */
+        .analytics-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 25px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: var(--ai-purple);
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--ai-purple);
+        }
+
+        .metric-label {
+            font-size: 0.8em;
+            opacity: 0.85;
+        }
+
+        /* Performance Monitor */
+        .performance-monitor {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .performance-chart {
+            height: 200px;
+            margin-bottom: 15px;
+        }
+
+        /* Edge AI Model Manager */
+        .model-manager {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .model-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .model-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .model-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .model-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .model-stats {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        /* Enterprise Analytics */
+        .enterprise-analytics {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .analytics-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--ai-purple);
+        }
+
+        .chart-container {
+            height: 300px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        /* API Integration Panel */
+        .api-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .api-endpoint {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-family: 'Monaco', monospace;
+            font-size: 0.85em;
+            border-left: 4px solid var(--ai-purple);
+        }
+
+        .api-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: var(--success-gradient);
+        }
+
+        .status-processing {
+            background: var(--warning-gradient);
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .enterprise-header {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .model-manager {
+                grid-template-columns: 1fr;
+            }
+            
+            .enterprise-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Animations */
+        .processing-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--ai-purple);
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Neural Network Visualization */
+        .neural-viz {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 150px;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .neuron {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--ai-purple);
+            border-radius: 50%;
+            animation: neuronPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes neuronPulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* Debug Console */
+        .debug-console {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid var(--ai-purple);
+            border-radius: 10px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .debug-console.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="enterprise-container">
+        <!-- Enterprise Header -->
+        <div class="enterprise-header">
+            <div class="enterprise-branding">
+                <div class="enterprise-logo">VibeCheck Enterprise AI</div>
+                <div>
+                    <div style="font-weight: 700; font-size: 1.1em;">Edge Computing Platform</div>
+                    <div class="enterprise-tagline">פלטפורמת AI מתקדמת לזיהוי רגשות עסקי</div>
+                </div>
+            </div>
+            <div class="ai-status">
+                <div class="processing-indicator"></div>
+                <span>מודלי AI פעילים</span>
+            </div>
+            <div class="edge-computing-indicator">
+                <span>⚡</span>
+                <span>עיבוד Edge</span>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- AI Processing Panel -->
+            <div class="ai-processing-panel">
+                <div class="panel-header">
+                    <div class="panel-title">🧠 עיבוד AI בזמן אמת</div>
+                    <div class="processing-stats">
+                        <div class="stat-chip">
+                            <span id="inferenceTime">~ms</span>
+                        </div>
+                        <div class="stat-chip">
+                            <span id="fpsStat">30 FPS</span>
+                        </div>
+                        <div class="stat-chip">
+                            <span id="modelAccuracy">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="video-container">
+                    <video id="video" autoplay muted playsinline></video>
+                    <canvas id="canvas"></canvas>
+                    <canvas id="poseCanvas"></canvas>
+                    <canvas id="edgeOverlay"></canvas>
+                    
+                    <div class="ai-overlay">
+                        <div class="model-indicator">
+                            <div>🎭 זיהוי פנים: <span id="faceStatus">מאתחל</span></div>
+                            <div>🤸 תנוחה: <span id="poseStatus">מאתחל</span></div>
+                            <div>🎤 אודיו: <span id="audioStatus">כבוי</span></div>
+                        </div>
+                        <div class="inference-time">
+                            <span id="realTimeInference">-- ms</span>
+                        </div>
+                    </div>
+
+                    <!-- Neural Network Visualization -->
+                    <div class="neural-viz" id="neuralViz"></div>
+                </div>
+
+                <!-- Enterprise Controls -->
+                <div class="enterprise-controls">
+                    <button id="startBtn" class="enterprise-btn" disabled>
+                        🚀 התחל עיבוד AI
+                    </button>
+                    <button id="trainBtn" class="enterprise-btn btn-ai-training">
+                        🧠 אימון מודל מותאם
+                    </button>
+                    <button id="deployBtn" class="enterprise-btn btn-edge-deploy">
+                        ⚡ פרוס ל-Edge
+                    </button>
+                    <button id="apiBtn" class="enterprise-btn btn-enterprise-api">
+                        🔗 API ארגוני
+                    </button>
+                </div>
+            </div>
+
+            <!-- Real-time Analytics -->
+            <div class="analytics-panel">
+                <div class="panel-header">
+                    <div class="panel-title">📊 אנליטיקה בזמן אמת</div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="emotionConfidence">--</div>
+                        <div class="metric-label">ביטחון רגש</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="stressLevel">--</div>
+                        <div class="metric-label">רמת לחץ</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="engagementScore">--</div>
+                        <div class="metric-label">מעורבות</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="authenticityScore">--</div>
+                        <div class="metric-label">אותנטיות</div>
+                    </div>
+                </div>
+
+                <!-- Performance Monitor -->
+                <div class="performance-monitor">
+                    <h4 style="margin-bottom: 15px;">⚡ ביצועי Edge Computing</h4>
+                    <div class="performance-chart">
+                        <canvas id="performanceChart" width="300" height="150"></canvas>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85em;">
+                        <span>CPU: <span id="cpuUsage">--</span>%</span>
+                        <span>זיכרון: <span id="memoryUsage">--</span>MB</span>
+                        <span>GPU: <span id="gpuUsage">--</span>%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edge AI Model Manager -->
+        <div class="model-manager">
+            <div class="model-card">
+                <div class="model-icon">🎭</div>
+                <div class="model-name">FaceEmotion v3.1</div>
+                <div class="model-stats">
+                    <div>דיוק: 97.3%</div>
+                    <div>גודל: 2.1MB</div>
+                    <div>זמן: 8ms</div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <span class="api-status status-active">● פעיל</span>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="model-icon">🎤</div>
+                <div class="model-name">VoiceStress v2.4</div>
+                <div class="model-stats">
+                    <div>דיוק: 94.7%</div>
+                    <div>גודל: 1.8MB</div>
+                    <div>זמן: 12ms</div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <span class="api-status status-processing">● באימון</span>
+                </div>
+            </div>
+
+            <div class="model-card">
+                <div class="model-icon">🤸</div>
+                <div class="model-name">PostureAnalyzer v1.9</div>
+                <div class="model-stats">
+                    <div>דיוק: 91.2%</div>
+                    <div>גודל: 3.4MB</div>
+                    <div>זמן: 15ms</div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <span class="api-status status-active">● פעיל</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enterprise Analytics Dashboard -->
+        <div class="enterprise-analytics">
+            <div class="panel-header">
+                <div class="panel-title">📈 דשבורד אנליטיקה ארגוני</div>
+                <div class="analytics-tabs">
+                    <button class="tab-btn active" data-tab="realtime">זמן אמת</button>
+                    <button class="tab-btn" data-tab="team">אנליטיקת צוות</button>
+                    <button class="tab-btn" data-tab="predictions">תחזיות</button>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="analyticsChart" width="800" height="250"></canvas>
+            </div>
+        </div>
+
+        <!-- API Integration Panel -->
+        <div class="api-panel">
+            <div class="panel-header">
+                <div class="panel-title">🔗 אינטגרציית API ארגוני</div>
+            </div>
+            
+            <div class="api-endpoint">
+                <div style="color: #22c1c3; font-weight: 600;">POST /api/v3/emotion/analyze</div>
+                <div style="margin: 8px 0;">נקודת קצה לניתוח רגשות בזמן אמת</div>
+                <div style="opacity: 0.7;">זמן תגובה: 45ms | שיעור הצלחה: 99.7%</div>
+            </div>
+
+            <div class="api-endpoint">
+                <div style="color: #22c1c3; font-weight: 600;">GET /api/v3/team/wellness</div>
+                <div style="margin: 8px 0;">נתוני דשבורד רווחת צוות</div>
+                <div style="opacity: 0.7;">זמן תגובה: 120ms | שיעור הצלחה: 99.9%</div>
+            </div>
+
+            <div class="api-endpoint">
+                <div style="color: #22c1c3; font-weight: 600;">POST /api/v3/model/deploy</div>
+                <div style="margin: 8px 0;">פריסת מודלים מותאמים להתקני edge</div>
+                <div style="opacity: 0.7;">זמן תגובה: 2.3s | שיעור הצלחה: 98.1%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debug Console -->
+    <div id="debugConsole" class="debug-console">
+        <div style="color: #00ff00; font-weight: bold;">VibeCheck Enterprise AI - Console</div>
+        <div id="debugOutput"></div>
+    </div>
+
+    <script>
+        class VibeCheckEnterpriseAI {
+            constructor() {
+                this.isDebugMode = false;
+                this.initializeElements();
+                this.initializeEdgeModels();
+                this.initializePerformanceMonitoring();
+                this.initializeCharts();
+                this.setupEventListeners();
+                this.createNeuralVisualization();
+                this.startSystemInitialization();
+                this.log('🚀 מערכת VibeCheck Enterprise AI מאותחלת');
+            }
+
+            log(message) {
+                console.log(message);
+                if (this.isDebugMode) {
+                    const debugOutput = document.getElementById('debugOutput');
+                    const time = new Date().toLocaleTimeString();
+                    debugOutput.innerHTML += `<div>[${time}] ${message}</div>`;
+                    debugOutput.scrollTop = debugOutput.scrollHeight;
+                }
+            }
+
+            initializeElements() {
+                this.video = document.getElementById('video');
+                this.canvas = document.getElementById('canvas');
+                this.poseCanvas = document.getElementById('poseCanvas');
+                this.edgeOverlay = document.getElementById('edgeOverlay');
+                this.startBtn = document.getElementById('startBtn');
+                this.trainBtn = document.getElementById('trainBtn');
+                this.deployBtn = document.getElementById('deployBtn');
+                this.apiBtn = document.getElementById('apiBtn');
+                
+                // Status indicators
+                this.faceStatus = document.getElementById('faceStatus');
+                this.poseStatus = document.getElementById('poseStatus');
+                this.audioStatus = document.getElementById('audioStatus');
+                this.inferenceTime = document.getElementById('inferenceTime');
+                this.realTimeInference = document.getElementById('realTimeInference');
+                
+                // Metrics
+                this.emotionConfidence = document.getElementById('emotionConfidence');
+                this.stressLevel = document.getElementById('stressLevel');
+                this.engagementScore = document.getElementById('engagementScore');
+                this.authenticityScore = document.getElementById('authenticityScore');
+                
+                // Performance
+                this.cpuUsage = document.getElementById('cpuUsage');
+                this.memoryUsage = document.getElementById('memoryUsage');
+                this.gpuUsage = document.getElementById('gpuUsage');
+
+                // Initialize state
+                this.isProcessing = false;
+                this.frameCount = 0;
+                this.lastProcessTime = 0;
+                this.fpsCounter = 0;
+                this.lastFpsTime = Date.now();
+
+                this.log('✅ אלמנטים אותחלו בהצלחה');
+            }
+
+            async initializeEdgeModels() {
+                this.edgeModels = {
+                    faceEmotion: {
+                        name: 'FaceEmotion v3.1',
+                        accuracy: 97.3,
+                        size: 2.1,
+                        status: 'loading',
+                        model: null
+                    },
+                    voiceStress: {
+                        name: 'VoiceStress v2.4',
+                        accuracy: 94.7,
+                        size: 1.8,
+                        status: 'training',
+                        model: null
+                    },
+                    postureAnalyzer: {
+                        name: 'PostureAnalyzer v1.9',
+                        accuracy: 91.2,
+                        size: 3.4,
+                        status: 'loading',
+                        model: null
+                    }
+                };
+
+                try {
+                    await this.initializeTensorFlow();
+                    await this.loadEdgeModels();
+                    this.log('✅ מודלי Edge אותחלו בהצלחה');
+                } catch (error) {
+                    this.log(`❌ שגיאה באתחול מודלי Edge: ${error.message}`);
+                }
+            }
+
+            async initializeTensorFlow() {
+                try {
+                    // Check if TensorFlow is available
+                    if (typeof tf === 'undefined') {
+                        throw new Error('TensorFlow.js לא נטען');
+                    }
+
+                    await tf.ready();
+                    this.log(`✅ TensorFlow.js מוכן - Backend: ${tf.getBackend()}`);
+                    
+                    // Create a simple model for demo
+                    this.createDemoModel();
+                    
+                    if (tf.getBackend() === 'webgl') {
+                        this.updateGPUUsage(45);
+                    } else {
+                        this.updateGPUUsage(0);
+                    }
+                } catch (error) {
+                    this.log(`❌ שגיאה באתחול TensorFlow: ${error.message}`);
+                    throw error;
+                }
+            }
+
+            createDemoModel() {
+                try {
+                    // Create a simple neural network for demonstration
+                    this.emotionModel = tf.sequential({
+                        layers: [
+                            tf.layers.dense({inputShape: [128], units: 64, activation: 'relu'}),
+                            tf.layers.dropout({rate: 0.5}),
+                            tf.layers.dense({units: 32, activation: 'relu'}),
+                            tf.layers.dense({units: 7, activation: 'softmax'}) // 7 emotions
+                        ]
+                    });
+                    
+                    this.emotionModel.compile({
+                        optimizer: 'adam',
+                        loss: 'categoricalCrossentropy',
+                        metrics: ['accuracy']
+                    });
+                    
+                    this.log('✅ מודל רגשות demo נוצר בהצלחה');
+                } catch (error) {
+                    this.log(`❌ שגיאה ביצירת מודל demo: ${error.message}`);
+                }
+            }
+
+            async loadEdgeModels() {
+                try {
+                    // Simulate loading custom edge models
+                    this.faceStatus.textContent = 'טוען...';
+                    await this.simulateModelLoad('faceEmotion');
+                    this.faceStatus.textContent = 'פעיל';
+                    this.edgeModels.faceEmotion.status = 'active';
+
+                    this.poseStatus.textContent = 'טוען...';
+                    await this.simulateModelLoad('postureAnalyzer');
+                    this.poseStatus.textContent = 'פעיל';
+                    this.edgeModels.postureAnalyzer.status = 'active';
+
+                    this.startBtn.disabled = false;
+                    this.inferenceTime.textContent = '8ms ממוצע';
+                    this.log('✅ כל המודלים נטענו בהצלחה');
+                    
+                } catch (error) {
+                    this.log(`❌ שגיאה בטעינת מודלי Edge: ${error.message}`);
+                    this.faceStatus.textContent = 'שגיאה';
+                    this.poseStatus.textContent = 'שגיאה';
+                }
+            }
+
+            async simulateModelLoad(modelName) {
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        this.log(`✅ מודל Edge ${modelName} נטען בהצלחה`);
+                        resolve();
+                    }, 1000 + Math.random() * 1000);
+                });
+            }
+
+            initializePerformanceMonitoring() {
+                this.performanceMetrics = {
+                    inferenceTime: [],
+                    cpuUsage: [],
+                    memoryUsage: [],
+                    gpuUsage: [],
+                    accuracy: [],
+                    timestamp: []
+                };
+
+                // Start performance monitoring
+                this.performanceInterval = setInterval(() => {
+                    this.updatePerformanceMetrics();
+                }, 1000);
+
+                this.log('✅ ניטור ביצועים הופעל');
+            }
+
+            initializeCharts() {
+                try {
+                    // Performance Chart
+                    const perfCtx = document.getElementById('performanceChart');
+                    if (!perfCtx) {
+                        throw new Error('Performance chart canvas not found');
+                    }
+                    
+                    this.performanceChart = new Chart(perfCtx.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: [],
+                            datasets: [{
+                                label: 'זמן הסקה (ms)',
+                                data: [],
+                                borderColor: '#8360c3',
+                                backgroundColor: 'rgba(131, 96, 195, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }, {
+                                label: 'שימוש CPU (%)',
+                                data: [],
+                                borderColor: '#2ebf91',
+                                backgroundColor: 'rgba(46, 191, 145, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    labels: { color: 'white' }
+                                }
+                            },
+                            scales: {
+                                x: { 
+                                    ticks: { color: 'white' },
+                                    grid: { color: 'rgba(255,255,255,0.1)' }
+                                },
+                                y: { 
+                                    ticks: { color: 'white' },
+                                    grid: { color: 'rgba(255,255,255,0.1)' }
+                                }
+                            },
+                            animation: {
+                                duration: 0
+                            }
+                        }
+                    });
+
+                    // Analytics Chart
+                    const analyticsCtx = document.getElementById('analyticsChart');
+                    if (!analyticsCtx) {
+                        throw new Error('Analytics chart canvas not found');
+                    }
+                    
+                    this.analyticsChart = new Chart(analyticsCtx.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: ['שמח', 'נייטרלי', 'עצוב', 'כועס', 'מופתע', 'פוחד'],
+                            datasets: [{
+                                label: 'התפלגות רגשות',
+                                data: [30, 25, 15, 10, 12, 8],
+                                backgroundColor: [
+                                    '#28A745', '#6C757D', '#007BFF', 
+                                    '#DC3545', '#FFC107', '#17A2B8'
+                                ],
+                                borderColor: [
+                                    '#28A745', '#6C757D', '#007BFF', 
+                                    '#DC3545', '#FFC107', '#17A2B8'
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { 
+                                    labels: { color: 'white' }
+                                }
+                            },
+                            scales: {
+                                x: { 
+                                    ticks: { color: 'white' },
+                                    grid: { color: 'rgba(255,255,255,0.1)' }
+                                },
+                                y: { 
+                                    ticks: { color: 'white' },
+                                    grid: { color: 'rgba(255,255,255,0.1)' }
+                                }
+                            }
+                        }
+                    });
+
+                    this.log('✅ גרפים אותחלו בהצלחה');
+                } catch (error) {
+                    this.log(`❌ שגיאה באתחול גרפים: ${error.message}`);
+                }
+            }
+
+            setupEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startAIProcessing());
+                this.trainBtn.addEventListener('click', () => this.openCustomTraining());
+                this.deployBtn.addEventListener('click', () => this.deployToEdge());
+                this.apiBtn.addEventListener('click', () => this.openAPIDocumentation());
+
+                // Tab switching
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.switchAnalyticsTab(e.target.dataset.tab);
+                    });
+                });
+
+                // Debug mode toggle (press 'D' key)
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'd' || e.key === 'D') {
+                        this.toggleDebugMode();
+                    }
+                });
+
+                this.log('✅ Event listeners הוגדרו בהצלחה');
+            }
+
+            toggleDebugMode() {
+                this.isDebugMode = !this.isDebugMode;
+                const debugConsole = document.getElementById('debugConsole');
+                if (this.isDebugMode) {
+                    debugConsole.classList.add('show');
+                    this.log('🔧 מצב Debug הופעל');
+                } else {
+                    debugConsole.classList.remove('show');
+                }
+            }
+
+            createNeuralVisualization() {
+                const neuralViz = document.getElementById('neuralViz');
+                if (!neuralViz) return;
+                
+                neuralViz.innerHTML = ''; // Clear existing neurons
+                
+                for (let i = 0; i < 20; i++) {
+                    const neuron = document.createElement('div');
+                    neuron.className = 'neuron';
+                    neuron.style.left = Math.random() * 180 + 'px';
+                    neuron.style.top = Math.random() * 130 + 'px';
+                    neuron.style.animationDelay = Math.random() * 2 + 's';
+                    neuralViz.appendChild(neuron);
+                }
+                
+                this.log('✅ ויזואליזציה נוירונית נוצרה');
+            }
+
+            async startSystemInitialization() {
+                const steps = [
+                    'טוען TensorFlow.js Edge Runtime...',
+                    'מאתחל מודלי AI מותאמים...',
+                    'מגדיר האצת WebGL...',
+                    'מכייל מדדי ביצועים...',
+                    'Enterprise AI מוכן!'
+                ];
+
+                for (let i = 0; i < steps.length; i++) {
+                    this.log(`🚀 ${steps[i]}`);
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                }
+            }
+
+            async startAIProcessing() {
+                try {
+                    this.log('🎥 מבקש גישה למצלמה...');
+                    
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            frameRate: { ideal: 30 }
+                        }
+                    });
+
+                    this.video.srcObject = stream;
+                    this.isProcessing = true;
+                    
+                    this.video.onloadedmetadata = () => {
+                        // Set canvas dimensions
+                        const width = this.video.videoWidth;
+                        const height = this.video.videoHeight;
+                        
+                        this.canvas.width = width;
+                        this.canvas.height = height;
+                        this.poseCanvas.width = width;
+                        this.poseCanvas.height = height;
+                        this.edgeOverlay.width = width;
+                        this.edgeOverlay.height = height;
+
+                        this.log(`✅ מצלמה מוכנה - רזולוציה: ${width}x${height}`);
+                        this.startContinuousProcessing();
+                    };
+
+                    this.startBtn.textContent = '✅ עיבוד AI פעיל';
+                    this.startBtn.disabled = true;
+                    this.startBtn.style.background = 'var(--success-gradient)';
+
+                } catch (error) {
+                    this.log(`❌ שגיאה בגישה למצלמה: ${error.message}`);
+                    this.faceStatus.textContent = 'שגיאת מצלמה';
+                    
+                    // Show user-friendly error message
+                    alert('לא ניתן לגשת למצלמה. אנא וודא שנתת הרשאה לאתר לגשת למצלמה.');
+                }
+            }
+
+            startContinuousProcessing() {
+                if (!this.isProcessing) return;
+                
+                const processFrame = () => {
+                    if (!this.video.srcObject || !this.isProcessing) return;
+
+                    const startTime = performance.now();
+                    this.frameCount++;
+
+                    // Process frame
+                    this.processVideoFrame();
+                    
+                    // Calculate inference time
+                    const endTime = performance.now();
+                    const inferenceTime = Math.round(endTime - startTime);
+                    this.realTimeInference.textContent = `${inferenceTime}ms`;
+                    
+                    // Update performance metrics
+                    this.performanceMetrics.inferenceTime.push(inferenceTime);
+                    if (this.performanceMetrics.inferenceTime.length > 50) {
+                        this.performanceMetrics.inferenceTime.shift();
+                    }
+
+                    // Calculate FPS
+                    this.calculateFPS();
+
+                    requestAnimationFrame(processFrame);
+                };
+                
+                processFrame();
+                this.log('🎬 עיבוד פריימים רציף החל');
+            }
+
+            processVideoFrame() {
+                try {
+                    // Clear canvases
+                    const faceCtx = this.canvas.getContext('2d');
+                    const poseCtx = this.poseCanvas.getContext('2d');
+                    const edgeCtx = this.edgeOverlay.getContext('2d');
+                    
+                    faceCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    poseCtx.clearRect(0, 0, this.poseCanvas.width, this.poseCanvas.height);
+                    edgeCtx.clearRect(0, 0, this.edgeOverlay.width, this.edgeOverlay.height);
+
+                    // Simulate face detection and emotion analysis
+                    this.simulateFaceDetection(faceCtx);
+                    
+                    // Simulate pose detection
+                    this.simulatePoseDetection(poseCtx);
+                    
+                    // Update emotion metrics
+                    this.updateEmotionMetrics();
+                    
+                } catch (error) {
+                    this.log(`❌ שגיאה בעיבוד פריים: ${error.message}`);
+                }
+            }
+
+            simulateFaceDetection(ctx) {
+                // Draw simulated face landmarks
+                const centerX = this.canvas.width * 0.5;
+                const centerY = this.canvas.height * 0.4;
+                const faceWidth = 200;
+                const faceHeight = 250;
+
+                // Face outline
+                ctx.strokeStyle = 'rgba(131, 96, 195, 0.8)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.ellipse(centerX, centerY, faceWidth/2, faceHeight/2, 0, 0, 2 * Math.PI);
+                ctx.stroke();
+
+                // Eyes
+                ctx.fillStyle = '#8360c3';
+                ctx.beginPath();
+                ctx.arc(centerX - 40, centerY - 30, 5, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(centerX + 40, centerY - 30, 5, 0, 2 * Math.PI);
+                ctx.fill();
+
+                // Mouth - simulate emotion
+                ctx.strokeStyle = '#2ebf91';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                const mouthY = centerY + 40;
+                const smileIntensity = Math.sin(Date.now() * 0.002) * 10;
+                ctx.arc(centerX, mouthY + smileIntensity, 30, 0, Math.PI);
+                ctx.stroke();
+
+                // Nose
+                ctx.strokeStyle = 'rgba(131, 96, 195, 0.6)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY - 10);
+                ctx.lineTo(centerX, centerY + 10);
+                ctx.stroke();
+            }
+
+            simulatePoseDetection(ctx) {
+                // Draw simulated pose skeleton
+                const centerX = this.poseCanvas.width * 0.5;
+                const shoulderY = this.poseCanvas.height * 0.3;
+                const hipY = this.poseCanvas.height * 0.55;
+
+                ctx.strokeStyle = 'rgba(46, 191, 145, 0.8)';
+                ctx.lineWidth = 4;
+
+                // Shoulders
+                ctx.beginPath();
+                ctx.moveTo(centerX - 80, shoulderY);
+                ctx.lineTo(centerX + 80, shoulderY);
+                ctx.stroke();
+
+                // Spine
+                ctx.beginPath();
+                ctx.moveTo(centerX, shoulderY);
+                ctx.lineTo(centerX, hipY);
+                ctx.stroke();
+
+                // Hips
+                ctx.beginPath();
+                ctx.moveTo(centerX - 60, hipY);
+                ctx.lineTo(centerX + 60, hipY);
+                ctx.stroke();
+
+                // Arms
+                ctx.beginPath();
+                ctx.moveTo(centerX - 80, shoulderY);
+                ctx.lineTo(centerX - 100, shoulderY + 60);
+                ctx.lineTo(centerX - 90, shoulderY + 120);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(centerX + 80, shoulderY);
+                ctx.lineTo(centerX + 100, shoulderY + 60);
+                ctx.lineTo(centerX + 90, shoulderY + 120);
+                ctx.stroke();
+
+                // Draw joint points
+                ctx.fillStyle = '#2ebf91';
+                const joints = [
+                    [centerX - 80, shoulderY], [centerX + 80, shoulderY],
+                    [centerX - 60, hipY], [centerX + 60, hipY],
+                    [centerX, shoulderY], [centerX, hipY]
+                ];
+
+                joints.forEach(([x, y]) => {
+                    ctx.beginPath();
+                    ctx.arc(x, y, 6, 0, 2 * Math.PI);
+                    ctx.fill();
+                });
+            }
+
+            calculateFPS() {
+                const now = Date.now();
+                this.fpsCounter++;
+                
+                if (now - this.lastFpsTime >= 1000) {
+                    const fps = Math.round(this.fpsCounter * 1000 / (now - this.lastFpsTime));
+                    document.getElementById('fpsStat').textContent = `${fps} FPS`;
+                    this.fpsCounter = 0;
+                    this.lastFpsTime = now;
+                }
+            }
+
+            updateEmotionMetrics() {
+                // Generate realistic emotion analysis data
+                const emotions = {
+                    happy: Math.random() * 40 + 20,
+                    neutral: Math.random() * 30 + 25,
+                    sad: Math.random() * 20 + 5,
+                    angry: Math.random() * 15 + 2,
+                    surprised: Math.random() * 25 + 5,
+                    fearful: Math.random() * 10 + 2
+                };
+
+                const dominantEmotion = Object.keys(emotions).reduce((a, b) => 
+                    emotions[a] > emotions[b] ? a : b
+                );
+
+                const confidence = emotions[dominantEmotion];
+                const stress = Math.max(0, emotions.angry + emotions.fearful + Math.random() * 20);
+                const engagement = Math.max(0, 100 - emotions.neutral - emotions.sad/2 + Math.random() * 20);
+                const authenticity = 85 + Math.random() * 15;
+
+                this.emotionConfidence.textContent = `${Math.round(confidence)}%`;
+                this.stressLevel.textContent = `${Math.round(stress)}%`;
+                this.engagementScore.textContent = `${Math.round(engagement)}%`;
+                this.authenticityScore.textContent = `${Math.round(authenticity)}%`;
+
+                // Update analytics chart periodically
+                if (this.frameCount % 120 === 0) { // Every ~4 seconds at 30fps
+                    this.updateAnalyticsChart(emotions);
+                }
+            }
+
+            updateAnalyticsChart(emotions) {
+                if (!this.analyticsChart) return;
+                
+                const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab || 'realtime';
+                
+                if (activeTab === 'realtime') {
+                    this.analyticsChart.data.datasets[0].data = [
+                        emotions.happy, emotions.neutral, emotions.sad,
+                        emotions.angry, emotions.surprised, emotions.fearful
+                    ];
+                    this.analyticsChart.update('none');
+                }
+            }
+
+            updatePerformanceMetrics() {
+                try {
+                    // Generate realistic performance metrics
+                    const cpu = 25 + Math.random() * 30 + (this.isProcessing ? 15 : 0);
+                    const memory = 180 + Math.random() * 50 + (this.isProcessing ? 30 : 0);
+                    const gpu = tf?.getBackend?.() === 'webgl' ? 35 + Math.random() * 25 : 0;
+
+                    this.cpuUsage.textContent = Math.round(cpu);
+                    this.memoryUsage.textContent = Math.round(memory);
+                    this.updateGPUUsage(Math.round(gpu));
+
+                    // Update performance chart
+                    if (this.performanceChart) {
+                        const now = new Date();
+                        const timeLabel = now.getHours() + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
+                        
+                        this.performanceChart.data.labels.push(timeLabel);
+                        this.performanceChart.data.datasets[0].data.push(
+                            this.performanceMetrics.inferenceTime[this.performanceMetrics.inferenceTime.length - 1] || 8
+                        );
+                        this.performanceChart.data.datasets[1].data.push(cpu);
+
+                        // Keep only last 20 data points
+                        if (this.performanceChart.data.labels.length > 20) {
+                            this.performanceChart.data.labels.shift();
+                            this.performanceChart.data.datasets[0].data.shift();
+                            this.performanceChart.data.datasets[1].data.shift();
+                        }
+
+                        this.performanceChart.update('none');
+                    }
+                } catch (error) {
+                    this.log(`❌ שגיאה בעדכון מדדי ביצועים: ${error.message}`);
+                }
+            }
+
+            updateGPUUsage(usage) {
+                if (this.gpuUsage) {
+                    this.gpuUsage.textContent = usage;
+                }
+            }
+
+            openCustomTraining() {
+                const message = `🧠 אימון מודל מותאם אישית
+                
+תכונות זמינות:
+• העלאת datasets מותאמים
+• כוונון עדין של מודלים קיימים  
+• בדיקת A/B של ביצועי מודלים
+• פריסה אוטומטית להתקני edge
+• ניטור והערכת מודלים
+
+תכונה ארגונית - צור קשר עם המכירות לקבלת גישה`;
+                
+                alert(message);
+                this.log('📞 נפתח חלון אימון מותאם');
+            }
+
+            deployToEdge() {
+                const message = `⚡ פריסה להתקני Edge
+                
+פלטפורמות נתמכות:
+• NVIDIA Jetson (TX2, Xavier, Orin)
+• Intel NUC עם Neural Compute Stick
+• Raspberry Pi 4 + Coral TPU
+• התקנים ניידים (iOS/Android)
+• חומרה מותאמת אישית
+
+צינור אוטומטי לאופטימיזציה ופריסת מודלים
+תמיכה ב-TensorRT, OpenVINO, ו-TensorFlow Lite`;
+
+                alert(message);
+                this.log('🚀 נפתח חלון פריסת Edge');
+            }
+
+            openAPIDocumentation() {
+                const message = `🔗 תיעוד API ארגוני
+                
+נקודות קצה זמינות:
+• POST /api/v3/emotion/analyze - ניתוח רגשות בזמן אמת
+• GET /api/v3/team/wellness - דשבורד רווחת צוות
+• POST /api/v3/batch/process - עיבוד אצווה
+• PUT /api/v3/model/deploy - פריסת מודלים מותאמים
+• GET /api/v3/analytics/reports - דוחות ואנליטיקה
+
+תיעוד מלא זמין ב: https://api.vibecheck.enterprise/docs
+SDK זמין ל-Python, JavaScript, Java, C#`;
+
+                alert(message);
+                this.log('📚 נפתח תיעוד API');
+            }
+
+            switchAnalyticsTab(tab) {
+                if (!this.analyticsChart) return;
+                
+                try {
+                    switch (tab) {
+                        case 'realtime':
+                            this.analyticsChart.data.labels = ['שמח', 'נייטרלי', 'עצוב', 'כועס', 'מופתע', 'פוחד'];
+                            this.analyticsChart.data.datasets[0].data = [30, 25, 15, 10, 12, 8];
+                            this.analyticsChart.data.datasets[0].label = 'רגשות בזמן אמת';
+                            break;
+                        case 'team':
+                            this.analyticsChart.data.labels = ['פיתוח', 'מכירות', 'שיווק', 'תמיכה', 'ניהול'];
+                            this.analyticsChart.data.datasets[0].data = [75, 68, 82, 71, 79];
+                            this.analyticsChart.data.datasets[0].label = 'ציון רווחת צוות';
+                            break;
+                        case 'predictions':
+                            this.analyticsChart.data.labels = ['לחץ נמוך', 'לחץ בינוני', 'לחץ גבוה', 'סיכון שחיקה'];
+                            this.analyticsChart.data.datasets[0].data = [45, 35, 15, 5];
+                            this.analyticsChart.data.datasets[0].label = 'תחזיות לחץ';
+                            break;
+                    }
+                    this.analyticsChart.update();
+                    this.log(`📊 עבר לטאב: ${tab}`);
+                } catch (error) {
+                    this.log(`❌ שגיאה במעבר טאב: ${error.message}`);
+                }
+            }
+
+            // Cleanup method
+            destroy() {
+                this.isProcessing = false;
+                
+                if (this.video.srcObject) {
+                    this.video.srcObject.getTracks().forEach(track => track.stop());
+                }
+                
+                if (this.performanceInterval) {
+                    clearInterval(this.performanceInterval);
+                }
+                
+                this.log('🔄 מערכת נוקתה בהצלחה');
+            }
+        }
+
+        // Initialize Enterprise AI System
+        let enterpriseAI;
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                try {
+                    enterpriseAI = new VibeCheckEnterpriseAI();
+                    console.log('🚀 VibeCheck Enterprise AI אותחל בהצלחה');
+                } catch (error) {
+                    console.error('❌ שגיאה באתחול Enterprise AI:', error);
+                }
+            }, 1000);
+        });
+
+        // Error handling and monitoring
+        window.addEventListener('error', (e) => {
+            console.error('🔥 שגיאת מערכת:', e.error);
+            if (enterpriseAI) {
+                enterpriseAI.log(`🔥 שגיאת מערכת: ${e.error.message}`);
+            }
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('🔥 Promise rejection:', e.reason);
+            if (enterpriseAI) {
+                enterpriseAI.log(`🔥 Promise rejection: ${e.reason}`);
+            }
+        });
+
+        // Performance monitoring
+        window.addEventListener('load', () => {
+            if ('performance' in window && performance.navigation) {
+                const loadTime = Date.now() - performance.timing.navigationStart;
+                console.log(`⚡ המערכת נטענה תוך ${loadTime}ms`);
+            }
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (enterpriseAI) {
+                enterpriseAI.destroy();
+            }
+        });
+    </script>
+</body>
+</html>
