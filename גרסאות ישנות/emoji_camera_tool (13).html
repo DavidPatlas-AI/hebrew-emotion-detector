@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeCheck Pro Max - זיהוי רגשות מתקדם</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm/dist/tf-backend-wasm.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-accent: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --gradient-warning: linear-gradient(135deg, #fdbb2d 0%, #22c1c3 100%);
+            --glass-bg: rgba(255, 255, 255, 0.12);
+            --glass-border: rgba(255, 255, 255, 0.25);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.85);
+            --shadow-glow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            --border-radius: 16px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'SF Pro Display', sans-serif;
+            background: var(--gradient-primary);
+            min-height: 100vh;
+            padding: 15px;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Advanced Header */
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 3.2em;
+            font-weight: 900;
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FF69B4, #00f2fe, #667eea);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            animation: logoFlow 4s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+
+        @keyframes logoFlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .tagline {
+            font-size: 1.1em;
+            font-weight: 600;
+            opacity: 0.95;
+            margin-bottom: 10px;
+        }
+
+        .version-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--gradient-accent);
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.85em;
+            font-weight: 700;
+            animation: versionPulse 3s ease-in-out infinite;
+            box-shadow: 0 4px 20px rgba(245, 87, 108, 0.4);
+        }
+
+        @keyframes versionPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 20px rgba(245, 87, 108, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 6px 30px rgba(245, 87, 108, 0.6); }
+        }
+
+        /* Glass Cards with Enhanced Effects */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 18px;
+            box-shadow: var(--shadow-glow);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .glass-card:hover::before {
+            left: 100%;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.5);
+        }
+
+        /* Advanced Status Panel */
+        .status-panel {
+            position: relative;
+            text-align: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .status-text {
+            font-weight: 600;
+            font-size: 1.15em;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .status.loading { color: #fdbb2d; }
+        .status.ready { color: #38ef7d; }
+        .status.error { color: #ff6b6b; }
+        .status.analyzing { 
+            color: #00f2fe; 
+            animation: analyzeGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes analyzeGlow {
+            from { text-shadow: 0 0 10px rgba(0, 242, 254, 0.5); }
+            to { text-shadow: 0 0 20px rgba(0, 242, 254, 0.8); }
+        }
+
+        .progress-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0%;
+            position: relative;
+        }
+
+        .progress-fill.face { background: var(--gradient-success); }
+        .progress-fill.voice { background: var(--gradient-warning); }
+        .progress-fill.pose { background: var(--gradient-accent); }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: progressShimmer 2s infinite;
+        }
+
+        @keyframes progressShimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* Enhanced Camera Section */
+        .camera-container {
+            position: relative;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+            margin-bottom: 18px;
+        }
+
+        #video {
+            width: 100%;
+            height: 320px;
+            object-fit: cover;
+            display: block;
+        }
+
+        #canvas, #poseCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(0, 242, 254, 0.08) 50%, transparent 70%);
+            pointer-events: none;
+            opacity: 0;
+            animation: scanPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes scanPulse {
+            0%, 100% { opacity: 0; transform: translateX(-100%) rotateZ(45deg); }
+            50% { opacity: 1; transform: translateX(100%) rotateZ(45deg); }
+        }
+
+        /* Multi-Modal Controls */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 18px;
+        }
+
+        .btn {
+            padding: 18px 24px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--gradient-success);
+            color: white;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: var(--gradient-accent);
+            font-size: 1.15em;
+            padding: 20px 24px;
+        }
+
+        .btn-multi-modal {
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c);
+            background-size: 300% 300%;
+            animation: multiModalFlow 3s ease infinite;
+        }
+
+        @keyframes multiModalFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Advanced Analysis Display */
+        .analysis-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 18px;
+        }
+
+        .emotion-display {
+            grid-column: span 2;
+            position: relative;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .emotion-sphere {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), rgba(0, 242, 254, 0.2));
+            border: 3px solid rgba(0, 242, 254, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: emotionFloat 6s ease-in-out infinite;
+            box-shadow: 0 0 40px rgba(0, 242, 254, 0.4);
+        }
+
+        @keyframes emotionFloat {
+            0%, 100% { transform: translateY(0px) rotateY(0deg); }
+            50% { transform: translateY(-15px) rotateY(180deg); }
+        }
+
+        .current-emoji {
+            font-size: 4.5em;
+            animation: emojiPulse 3s ease-in-out infinite;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes emojiPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Multi-Modal Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(15px);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .metric-card:hover::before {
+            opacity: 1;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(0, 242, 254, 0.4);
+        }
+
+        .metric-value {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #00f2fe;
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.85;
+            font-weight: 500;
+        }
+
+        /* Voice Analysis Visualizer */
+        .voice-visualizer {
+            height: 80px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .voice-wave {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 100%;
+        }
+
+        .voice-bar {
+            width: 4px;
+            background: var(--gradient-warning);
+            border-radius: 2px;
+            animation: voicePulse 0.8s ease-in-out infinite alternate;
+            transform-origin: bottom;
+        }
+
+        .voice-bar:nth-child(2n) { animation-delay: 0.1s; }
+        .voice-bar:nth-child(3n) { animation-delay: 0.2s; }
+        .voice-bar:nth-child(4n) { animation-delay: 0.3s; }
+
+        @keyframes voicePulse {
+            from { height: 20%; }
+            to { height: 80%; }
+        }
+
+        /* Enhanced Social Battery */
+        .social-battery {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .battery-title {
+            color: #FFD700;
+            font-weight: 800;
+            font-size: 1.1em;
+            margin-bottom: 18px;
+            text-align: center;
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        .battery-container {
+            position: relative;
+            background: #1a1a1a;
+            border-radius: 30px;
+            height: 50px;
+            border: 3px solid #333;
+            overflow: hidden;
+            margin-bottom: 18px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .battery-fill {
+            height: 100%;
+            border-radius: 27px;
+            transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(90deg, #DC3545 0%, #FFC107 40%, #28A745 100%);
+            width: 50%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .battery-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: batteryShimmer 3s infinite;
+        }
+
+        @keyframes batteryShimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .battery-emojis {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            transform: translateY(-50%);
+            display: flex;
+            justify-content: space-between;
+            padding: 0 15px;
+            font-size: 1.4em;
+            z-index: 3;
+        }
+
+        .battery-tip {
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 22px;
+            background: #333;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .mood-text {
+            text-align: center;
+            font-size: 1em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-top: 12px;
+            min-height: 25px;
+        }
+
+        /* Advanced Text Area */
+        .text-area {
+            width: 100%;
+            min-height: 120px;
+            padding: 20px;
+            border: 2px solid var(--glass-border);
+            border-radius: 15px;
+            font-size: 1.05em;
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--text-primary);
+            resize: vertical;
+            direction: rtl;
+            backdrop-filter: blur(15px);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .text-area:focus {
+            outline: none;
+            border-color: #00f2fe;
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+        }
+
+        .text-area::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* Enhanced Sharing */
+        .share-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .share-btn {
+            padding: 14px 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+        }
+
+        .share-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Floating Particles Enhancement */
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            font-size: 1.5em;
+            opacity: 0.7;
+            animation: particleFloat 12s ease-in-out infinite;
+        }
+
+        @keyframes particleFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.7; }
+            25% { transform: translateY(-40px) rotate(90deg); opacity: 0.9; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 0.5; }
+            75% { transform: translateY(-35px) rotate(270deg); opacity: 0.8; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .app-container {
+                padding: 0 10px;
+            }
+            
+            .logo {
+                font-size: 2.8em;
+            }
+            
+            #video {
+                height: 280px;
+            }
+            
+            .analysis-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .emotion-sphere {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .current-emoji {
+                font-size: 4em;
+            }
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-particles" id="particles"></div>
+    
+    <div class="app-container">
+        <!-- Enhanced Header -->
+        <div class="header">
+            <div class="logo">VibeCheck Pro Max</div>
+            <div class="tagline">מערכת זיהוי רגשות מולטי-מודאלית מתקדמת</div>
+            <div class="version-badge">
+                <span>🚀</span>
+                <span>AI POWERED 2025</span>
+            </div>
+        </div>
+        
+        <!-- Advanced Status Panel -->
+        <div class="glass-card">
+            <div class="status-panel">
+                <div id="status" class="status loading">
+                    <div class="status-text">מאתחל מערכת AI מולטי-מודאלית...</div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill face" id="faceProgress"></div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill voice" id="voiceProgress"></div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill pose" id="poseProgress"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Enhanced Camera Section -->
+        <div class="glass-card">
+            <div class="camera-container">
+                <video id="video" autoplay muted playsinline></video>
+                <canvas id="canvas"></canvas>
+                <canvas id="poseCanvas"></canvas>
+                <div class="camera-overlay"></div>
+            </div>
+        </div>
+        
+        <!-- Multi-Modal Controls -->
+        <div class="glass-card">
+            <div class="controls-grid">
+                <button id="startBtn" class="btn btn-primary" disabled>
+                    🎥 הפעל מערכת מולטי-מודאלית
+                </button>
+                <button id="analyzeBtn" class="btn" disabled>
+                    🧠 נתח רגשות מתקדם
+                </button>
+                <button id="continuousBtn" class="btn btn-multi-modal" disabled>
+                    🔄 מצב ניטור רציף מתקדם
+                </button>
+            </div>
+        </div>
+
+        <!-- Voice Analysis Visualizer -->
+        <div class="glass-card">
+            <h3 style="color: #fdbb2d; margin-bottom: 15px; text-align: center;">🎤 ניתוח טון קולי</h3>
+            <div class="voice-visualizer">
+                <div class="voice-wave" id="voiceWave">
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                </div>
+            </div>
+            <button id="voiceBtn" class="btn" style="background: var(--gradient-warning);">
+                🎤 הפעל ניתוח קולי
+            </button>
+        </div>
+
+        <!-- Enhanced Emotion Display -->
+        <div class="glass-card">
+            <div class="emotion-display">
+                <div class="emotion-sphere">
+                    <div class="current-emoji" id="currentEmoji">🤔</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multi-Modal Analysis Metrics -->
+        <div class="glass-card">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="faceEmotion">--</div>
+                    <div class="metric-label">הבעת פנים</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="voiceEmotion">--</div>
+                    <div class="metric-label">טון קולי</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="poseEmotion">--</div>
+                    <div class="metric-label">שפת גוף</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="combinedConfidence">--</div>
+                    <div class="metric-label">דיוק משולב</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="stressLevel">--</div>
+                    <div class="metric-label">רמת לחץ</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="authenticityScore">--</div>
+                    <div class="metric-label">ציון אמינות</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Social Battery -->
+        <div class="glass-card">
+            <div class="social-battery">
+                <div class="battery-title">🔋 EMOTIONAL ENERGY LEVEL</div>
+                <div class="battery-container">
+                    <div class="battery-fill" id="batteryFill"></div>
+                    <div class="battery-emojis">
+                        <span>😩</span>
+                        <span>😕</span>
+                        <span>😐</span>
+                        <span>🙂</span>
+                        <span>😃</span>
+                        <span>😄</span>
+                    </div>
+                    <div class="battery-tip"></div>
+                </div>
+                <div class="mood-text" id="moodDisplay">מחכה לניתוח מולטי-מודאלי...</div>
+            </div>
+        </div>
+
+        <!-- Enhanced Text Area and Sharing -->
+        <div class="glass-card">
+            <textarea id="textArea" class="text-area" placeholder="הטקסט שלך עם האימוג'ים המתאימים יופיע כאן... מערכת AI מתקדמת מנתחת פנים + קול + שפת גוף 🎭🎤🤸‍♂️"></textarea>
+            
+            <div class="share-grid">
+                <button class="share-btn" onclick="shareToWhatsApp()">
+                    💬 WhatsApp
+                </button>
+                <button class="share-btn" onclick="shareToInstagram()">
+                    📸 Instagram
+                </button>
+                <button class="share-btn" onclick="copyToClipboard()">
+                    📋 העתק
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class VibeCheckProMax {
+            constructor() {
+                this.initializeElements();
+                this.initializeState();
+                this.initializeEmotionDatabase();
+                this.init

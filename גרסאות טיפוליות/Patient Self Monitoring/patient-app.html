@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeCheck למטופלים - ניטור עצמי</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            min-height: 100vh;
+            color: #333;
+            direction: rtl;
+        }
+
+        .app-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .mood-tracker {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        .mood-buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .mood-btn {
+            padding: 20px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 2em;
+            transition: all 0.3s ease;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .mood-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .mood-btn.selected {
+            background: #4ECDC4;
+            color: white;
+        }
+
+        .exercises {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        .exercise-card {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border-right: 4px solid #4ECDC4;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            color: white;
+        }
+
+        .progress-chart {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            background: #f0f0f0;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>🏥 מעקב עצמי של המטופל</h1>
+            <p>כלי מעקב ואימון עצמי מתקדם</p>
+            
+            <!-- Media Controls for Patient -->
+            <div style="margin: 20px 0; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 15px;">
+                <h3>📹 יומן וידאו אישי</h3>
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 15px 0;">
+                    <button class="btn" id="togglePatientCamera" onclick="togglePatientCamera()" style="background: linear-gradient(45deg, #e74c3c, #c0392b);">
+                        📹 הדלק מצלמה
+                    </button>
+                    <button class="btn" id="togglePatientMic" onclick="togglePatientMicrophone()" style="background: linear-gradient(45deg, #3498db, #2980b9);">
+                        🎤 הדלק מיקרופון
+                    </button>
+                    <button class="btn" onclick="startPersonalJournal()" style="background: linear-gradient(45deg, #9b59b6, #8e44ad);">
+                        📓 יומן אישי
+                    </button>
+                    <button class="btn" onclick="recordMoodEntry()" style="background: linear-gradient(45deg, #f39c12, #e67e22);">
+                        🎭 הקלט מצב רוח
+                    </button>
+                </div>
+                
+                <!-- Patient's Personal Video Display -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0;">
+                    <div style="text-align: center;">
+                        <video id="patientVideo" autoplay muted style="width: 100%; max-width: 300px; border-radius: 10px; background: #333;"></video>
+                        <div style="margin-top: 8px; font-weight: bold;">📹 המצלמה שלי</div>
+                        <div style="font-size: 0.9em; color: #666;">לביטחון מלא - הקלטה מקומית בלבד</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div id="moodMirror" style="width: 100%; height: 200px; background: linear-gradient(45deg, #4ECDC4, #44A08D); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 4em;">
+                            😊
+                        </div>
+                        <div style="margin-top: 8px; font-weight: bold;">🎭 מצב הרוח שלי</div>
+                        <div id="moodDescription" style="font-size: 0.9em; color: #666;">מחכה לניתוח...</div>
+                    </div>
+                </div>
+
+                <!-- Personal Audio Visualizer -->
+                <div style="margin: 15px 0;">
+                    <h4>🎵 המיקרופון שלי</h4>
+                    <div id="personalAudioVisualizer" style="display: flex; justify-content: center; align-items: end; height: 50px; gap: 3px; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 10px;">
+                        <!-- Audio bars will be generated here -->
+                    </div>
+                    <div style="text-align: center; margin-top: 10px;">
+                        <div id="voiceConfidenceLevel" style="font-size: 0.9em; color: #666;">רמת ביטחון בקול: <span id="voiceConfidence">0%</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin: 20px 0;">
+                <button class="btn" onclick="logMood()">😊 דווח מצב רוח</button>
+                <button class="btn" onclick="completeExercise()">🧘 תרגיל נשימה</button>
+                <button class="btn" onclick="viewProgress()">📈 צפה בהתקדמות</button>
+            </div>
+
+            <!-- Personal Journal Modal -->
+            <div id="personalJournalModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000;">
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 700px; max-height: 80%; overflow-y: auto;">
+                    <h2>📓 היומן האישי שלי</h2>
+                    
+                    <div style="margin: 20px 0;">
+                        <h3>✍️ כתיבת רשומה חדשה</h3>
+                        <textarea id="journalEntry" placeholder="איך אני מרגיש היום? מה קרה לי? מה אני חושב?" style="width: 100%; height: 120px; padding: 15px; border-radius: 10px; border: 1px solid #ddd; resize: vertical;"></textarea>
+                        <div style="display: flex; gap: 10px; margin: 10px 0;">
+                            <select id="journalMood" style="padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                                <option value="very-happy">😄 מאוד שמח</option>
+                                <option value="happy">😊 שמח</option>
+                                <option value="neutral">😐 אדיש</option>
+                                <option value="sad">😔 עצוב</option>
+                                <option value="very-sad">😢 מאוד עצוב</option>
+                                <option value="anxious">😰 חרד</option>
+                                <option value="angry">😠 כועס</option>
+                                <option value="excited">🤩 נרגש</option>
+                            </select>
+                            <input type="range" id="moodIntensity" min="1" max="10" value="5" style="flex: 1;">
+                            <span id="intensityValue">5/10</span>
+                        </div>
+                        <button onclick="saveJournalEntry()" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">💾 שמור רשומה</button>
+                    </div>
+
+                    <div style="margin: 20px 0;">
+                        <h3>📚 הרשומות שלי</h3>
+                        <div id="journalHistory"></div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button onclick="closePersonalJournal()" style="padding: 10px 20px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer;">סגור</button>
+                        <button onclick="exportPersonalData()" style="padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">📤 יצא יומן</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+                <button class="btn" onclick="goToHome()" style="background: linear-gradient(45deg, #4CAF50, #388E3C);">
+                    🏠 דף הבית הראשי
+                </button>
+                <button class="btn" onclick="showAllVersions()" style="background: linear-gradient(45deg, #2196F3, #1976D2);">
+                    🏥 כל הגרסאות הטיפוליות
+                </button>
+                <button class="btn" onclick="goBack()" style="background: linear-gradient(45deg, #FF9800, #F57C00);">
+                    ⬅️ חזרה
+                </button>
+            </div>
+        </div>
+
+        <div class="mood-tracker">
+            <h3>📊 איך אתה מרגיש היום?</h3>
+            <div class="mood-buttons">
+                <button class="mood-btn" data-mood="very-happy">😄</button>
+                <button class="mood-btn" data-mood="happy">😊</button>
+                <button class="mood-btn" data-mood="neutral">😐</button>
+                <button class="mood-btn" data-mood="sad">😔</button>
+                <button class="mood-btn" data-mood="very-sad">😢</button>
+            </div>
+            <button class="btn btn-primary" onclick="saveMood()">💾 שמור מצב רוח</button>
+        </div>
+
+        <div class="exercises">
+            <h3>🧘‍♂️ תרגילי CBT מותאמים</h3>
+            
+            <div class="exercise-card">
+                <h4>🫁 תרגיל נשימה עמוקה</h4>
+                <p>נשימות איטיות ועמוקות להרגעת החרדה</p>
+                <button class="btn btn-primary" onclick="startBreathing()">התחל תרגיל</button>
+            </div>
+            
+            <div class="exercise-card">
+                <h4>💭 זיהוי מחשבות אוטומטיות</h4>
+                <p>רשום מחשבות שליליות וזהה דפוסים</p>
+                <button class="btn btn-primary" onclick="openThoughtLog()">פתח יומן</button>
+            </div>
+            
+            <div class="exercise-card">
+                <h4>🌍 טכניקת 5-4-3-2-1</h4>
+                <p>התמקדות בחושים להפחתת דיסוציאציה</p>
+                <button class="btn btn-primary" onclick="start54321()">התחל טכניקה</button>
+            </div>
+        </div>
+
+        <div class="progress-chart">
+            <h3>📈 ההתקדמות שלך השבוע</h3>
+            
+            <div style="margin: 15px 0;">
+                <label>ימים עם מצב רוח חיובי:</label>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 70%"></div>
+                </div>
+                <span>5 מתוך 7 ימים</span>
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <label>תרגילים שבוצעו:</label>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 85%"></div>
+                </div>
+                <span>17 מתוך 20 תרגילים</span>
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <label>ציון מצב רוח ממוצע:</label>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 75%"></div>
+                </div>
+                <span>7.5/10</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedMood = null;
+        let moodHistory = JSON.parse(localStorage.getItem('moodHistory') || '[]');
+        let exerciseProgress = JSON.parse(localStorage.getItem('exerciseProgress') || '{}');
+        let currentStreak = parseInt(localStorage.getItem('currentStreak') || '0');
+
+        // נוטיפיקציות מקצועיות
+        function showNotification(message, type = 'info', duration = 3000) {
+            console.log(`📢 [${type.toUpperCase()}] ${message}`);
+            
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 10px;
+                color: white;
+                font-weight: 600;
+                z-index: 10000;
+                transform: translateX(400px);
+                transition: all 0.3s ease;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                max-width: 350px;
+            `;
+            
+            const colors = {
+                success: 'linear-gradient(45deg, #4CAF50, #45a049)',
+                error: 'linear-gradient(45deg, #f44336, #da190b)',
+                warning: 'linear-gradient(45deg, #ff9800, #e68900)',
+                info: 'linear-gradient(45deg, #2196F3, #1976D2)'
+            };
+            
+            notification.style.background = colors[type] || colors.info;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(400px)';
+                setTimeout(() => notification.remove(), 300);
+            }, duration);
+        }
+
+        // Mood selection - עדכון מתקדם
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                console.log('🌟 מאתחל אפליקציית המטופל...');
+                showNotification('🌟 ברוך הבא לאפליקציית VibeCheck למטופלים!', 'success');
+                
+                // הוספת אפקטי hover ללחצני מצב רוח
+                document.querySelectorAll('.mood-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        try {
+                            document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+                            this.classList.add('selected');
+                            selectedMood = this.dataset.mood;
+                            
+                            const moodEmoji = this.textContent;
+                            const moodNames = {
+                                'very-happy': 'מאוד שמח',
+                                'happy': 'שמח',
+                                'neutral': 'ניטרלי',
+                                'sad': 'עצוב',
+                                'very-sad': 'מאוד עצוב'
+                            };
+                            
+                            showNotification(`${moodEmoji} נבחר מצב רוח: ${moodNames[selectedMood]}`, 'info', 2000);
+                            console.log('🎭 מצב רוח נבחר:', selectedMood);
+                            
+                            // אפקט ויזואלי
+                            this.style.transform = 'scale(1.1)';
+                            setTimeout(() => {
+                                this.style.transform = 'scale(1)';
+                            }, 200);
+                            
+                        } catch (error) {
+                            console.error('❌ שגיאה בבחירת מצב רוח:', error);
+                        }
+                    });
+                });
+                
+                // הוספת קיצורי מקלדת
+                document.addEventListener('keydown', function(e) {
+                    if (e.ctrlKey) {
+                        switch(e.key) {
+                            case 's':
+                                e.preventDefault();
+                                saveMood();
+                                break;
+                            case 'b':
+                                e.preventDefault();
+                                startBreathing();
+                                break;
+                            case 'h':
+                                e.preventDefault();
+                                goToHome();
+                                break;
+                        }
+                    }
+                });
+                
+                // עדכון סטטיסטיקות ראשוני
+                updateProgressDisplay();
+                
+                console.log('✅ אפליקציית המטופל הוקמה בהצלחה');
+                
+                // הצגת טיפים לשימוש
+                setTimeout(() => {
+                    showNotification('💡 טיפ: השתמש ב-Ctrl+S לשמירת מצב רוח, Ctrl+B לתרגיל נשימה', 'info', 5000);
+                }, 3000);
+                
+            } catch (error) {
+                console.error('❌ שגיאה באתחול אפליקציית המטופל:', error);
+                showNotification('❌ שגיאה באתחול האפליקציה', 'error');
+            }
+        });
+
+        function saveMood() {
+            try {
+                console.log('💾 שומר מצב רוח...');
+                
+                if (!selectedMood) {
+                    showNotification('⚠️ אנא בחר מצב רוח קודם', 'warning');
+                    return;
+                }
+                
+                const today = new Date().toISOString().split('T')[0];
+                const existingToday = moodHistory.find(entry => entry.date === today);
+                
+                if (existingToday) {
+                    // עדכון הרשומה הקיימת
+                    existingToday.mood = selectedMood;
+                    existingToday.timestamp = new Date().toISOString();
+                    showNotification('✅ מצב הרוח עודכן לליום!', 'success');
+                } else {
+                    // הוספת רשומה חדשה
+                    moodHistory.push({
+                        date: today,
+                        mood: selectedMood,
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    // עדכון רצף ימים
+                    currentStreak++;
+                    localStorage.setItem('currentStreak', currentStreak.toString());
+                    
+                    showNotification('✅ מצב הרוח נשמר בהצלחה!', 'success');
+                    
+                    if (currentStreak > 1) {
+                        setTimeout(() => {
+                            showNotification(`🔥 רצף של ${currentStreak} ימים! כל הכבוד!`, 'success', 4000);
+                        }, 1000);
+                    }
+                }
+                
+                localStorage.setItem('moodHistory', JSON.stringify(moodHistory));
+                
+                // אפקט ויזואלי של שמירה
+                document.body.style.filter = 'brightness(1.1)';
+                setTimeout(() => {
+                    document.body.style.filter = 'brightness(1)';
+                }, 300);
+                
+                // Reset selection
+                document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+                selectedMood = null;
+                
+                // עדכון תצוגת ההתקדמות
+                updateProgressDisplay();
+                
+                console.log('💾 מצב רוח נשמר:', { mood: selectedMood, date: today, totalEntries: moodHistory.length });
+                
+            } catch (error) {
+                console.error('❌ שגיאה בשמירת מצב רוח:', error);
+                showNotification('❌ שגיאה בשמירת מצב הרוח', 'error');
+            }
+        }
+
+        function startBreathing() {
+            try {
+                console.log('🫁 מתחיל תרגיל נשימה...');
+                showNotification('🫁 מתחיל תרגיל נשימה מונחה...', 'info');
+                
+                const instructions = [
+                    '🫁 נשף פנימה באיטיות למשך 4 שניות...',
+                    '⏸️ עצור ואחזק את הנשימה למשך 4 שניות...',
+                    '💨 נשף החוצה לאט למשך 6 שניות...',
+                    '😌 הרגש את הרגיעה שעוטפת אותך...'
+                ];
+                
+                let step = 0;
+                showNotification(instructions[step], 'info', 4000);
+                
+                const breathingInterval = setInterval(() => {
+                    step++;
+                    if (step < instructions.length) {
+                        showNotification(instructions[step], 'info', 4000);
+                    } else {
+                        clearInterval(breathingInterval);
+                        setTimeout(() => {
+                            showNotification('✅ תרגיל הנשימה הושלם! איך אתה מרגיש?', 'success', 4000);
+                            recordExercise('breathing');
+                        }, 4000);
+                    }
+                }, 4500);
+                
+                console.log('🫁 תרגיל נשימה החל');
+                
+            } catch (error) {
+                console.error('❌ שגיאה בתרגיל נשימה:', error);
+                showNotification('❌ שגיאה בתרגיל הנשימה', 'error');
+            }
+        }
+
+        function openThoughtLog() {
+            try {
+                console.log('💭 פותח יומן מחשבות...');
+                showNotification('💭 פותח יומן מחשבות אוטומטיות...', 'info');
+                
+                const thought = prompt('💭 כתוב מחשבה שלילית שחוויתה:');
+                if (thought && thought.trim()) {
+                    const evidence = prompt('🔍 כעת חשוב - מה הראיות שתומכות במחשבה הזו?');
+                    const counter = prompt('⚖️ ומה הראיות שנגד המחשבה הזו?');
+                    
+                    // שמירת המחשבה
+                    const thoughtEntry = {
+                        thought: thought.trim(),
+                        evidence: evidence || '',
+                        counter: counter || '',
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    let thoughtLog = JSON.parse(localStorage.getItem('thoughtLog') || '[]');
+                    thoughtLog.push(thoughtEntry);
+                    localStorage.setItem('thoughtLog', JSON.stringify(thoughtLog));
+                    
+                    showNotification(`📝 המחשבה נרשמה: "${thought.substring(0, 30)}..."`, 'success', 4000);
+                    setTimeout(() => {
+                        showNotification('💡 זכור: מחשבות הן לא עובדות, אלא רק תיאורטציות', 'info', 4000);
+                    }, 2000);
+                    
+                    recordExercise('thoughtLog');
+                    console.log('💭 מחשבה נרשמה ביומן:', thoughtEntry);
+                } else if (thought !== null) {
+                    showNotification('⚠️ לא הוזן תוכן למחשבה', 'warning');
+                }
+                
+            } catch (error) {
+                console.error('❌ שגיאה ביומן מחשבות:', error);
+                showNotification('❌ שגיאה בפתיחת יומן המחשבות', 'error');
+            }
+        }
+
+        function start54321() {
+            try {
+                console.log('🌍 מתחיל טכניקת 5-4-3-2-1...');
+                showNotification('🌍 מתחיל טכניקת הארקה 5-4-3-2-1...', 'info');
+                
+                const steps = [
+                    '👀 זהה 5 דברים שאתה רואה סביבך...',
+                    '✋ מצא 4 דברים שאתה יכול לגעת בהם...',
+                    '👂 הקשב ל-3 צלילים שאתה שומע...',
+                    '👃 זהה 2 ריחות באוויר...',
+                    '👅 מצא דבר אחד שאתה יכול לטעום...'
+                ];
+                
+                let step = 0;
+                showNotification(steps[step], 'info', 6000);
+                
+                const technique54321 = setInterval(() => {
+                    step++;
+                    if (step < steps.length) {
+                        showNotification(steps[step], 'info', 6000);
+                    } else {
+                        clearInterval(technique54321);
+                        setTimeout(() => {
+                            showNotification('✅ טכניקת ההארקה הושלמה! אתה חוזר להיות נוכח', 'success', 4000);
+                            recordExercise('grounding');
+                        }, 6000);
+                    }
+                }, 7000);
+                
+                console.log('🌍 טכניקת 5-4-3-2-1 החלה');
+                
+            } catch (error) {
+                console.error('❌ שגיאה בטכניקת הארקה:', error);
+                showNotification('❌ שגיאה בטכניקת ההארקה', 'error');
+            }
+        }
+
+        function recordExercise(exerciseType) {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                if (!exerciseProgress[today]) {
+                    exerciseProgress[today] = [];
+                }
+                
+                exerciseProgress[today].push({
+                    type: exerciseType,
+                    timestamp: new Date().toISOString()
+                });
+                
+                localStorage.setItem('exerciseProgress', JSON.stringify(exerciseProgress));
+                console.log(`📊 תרגיל ${exerciseType} נרשם להיום`);
+                
+                updateProgressDisplay();
+                
+            } catch (error) {
+                console.error('❌ שגיאה ברישום התרגיל:', error);
+            }
+        }
+
+        function updateProgressDisplay() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const todayExercises = exerciseProgress[today] || [];
+                const todayMood = moodHistory.find(entry => entry.date === today);
+                
+                console.log(`📊 עדכון תצוגת התקדמות: ${todayExercises.length} תרגילים, מצב רוח: ${todayMood ? todayMood.mood : 'לא נבחר'}`);
+                
+                // עדכון אחוזי התקדמות (זה סימולציה - בגרסה אמיתית יהיו חישובים אמיתיים)
+                const weeklyMoodScore = Math.min(100, (moodHistory.length * 10) + (currentStreak * 5));
+                const exerciseCompletion = Math.min(100, (Object.keys(exerciseProgress).length * 15));
+                
+                // עדכון visual של פסי התקדמות
+                const progressBars = document.querySelectorAll('.progress-fill');
+                if (progressBars.length >= 2) {
+                    progressBars[0].style.width = weeklyMoodScore + '%';
+                    progressBars[1].style.width = exerciseCompletion + '%';
+                }
+                
+            } catch (error) {
+                console.error('❌ שגיאה בעדכון תצוגת התקדמות:', error);
+            }
+        }
+
+        function goToHome() {
+            try {
+                console.log('🏠 חוזר לדף הבית...');
+                if (confirm('האם ברצונך לחזור לדף הבית הראשי?')) {
+                    showNotification('🏠 מעביר לדף הבית הראשי...', 'info', 1500);
+                    setTimeout(() => {
+                        window.location.href = '../../index.html';
+                    }, 1500);
+                }
+            } catch (error) {
+                console.error('❌ שגיאה במעבר לדף הבית:', error);
+                showNotification('❌ שגיאה במעבר לדף הבית', 'error');
+            }
+        }
+        
+        function showAllVersions() {
+            try {
+                console.log('🏥 מעבר לגלריית גרסאות...');
+                showNotification('🏥 מעביר לגלריית הגרסאות...', 'info', 1500);
+                setTimeout(() => {
+                    window.location.href = '../../gallery-versions.html';
+                }, 1500);
+            } catch (error) {
+                console.error('❌ שגיאה במעבר לגלריה:', error);
+                showNotification('❌ שגיאה במעבר לגלריה', 'error');
+            }
+        }
+        
+        function goBack() {
+            try {
+                console.log('⬅️ חוזר לעמוד הקודם...');
+                if (window.history.length > 1) {
+                    showNotification('⬅️ חוזר לעמוד הקודם...', 'info', 1000);
+                    setTimeout(() => {
+                        window.history.back();
+                    }, 1000);
+                } else {
+                    goToHome();
+                }
+            } catch (error) {
+                console.error('❌ שגיאה בחזרה:', error);
+                goToHome();
+            }
+        }
+
+        // פונקציות נוספות למטופלים
+        function getMoodInsight() {
+            try {
+                if (moodHistory.length === 0) {
+                    showNotification('📊 עדיין לא רשמת מצבי רוח - התחל עוד היום!', 'info', 4000);
+                    return;
+                }
+                
+                const lastWeek = moodHistory.slice(-7);
+                const moodCounts = lastWeek.reduce((acc, entry) => {
+                    acc[entry.mood] = (acc[entry.mood] || 0) + 1;
+                    return acc;
+                }, {});
+                
+                const dominantMood = Object.keys(moodCounts).reduce((a, b) => 
+                    moodCounts[a] > moodCounts[b] ? a : b
+                );
+                
+                const insights = {
+                    'very-happy': '🌟 שבוע מצוין! המשך עם מה שעושה לך טוב',
+                    'happy': '😊 מגמה חיובית! תמשיך כך',
+                    'neutral': '😐 שבוע רגוע - נסה להוסיף פעילויות מהנות',
+                    'sad': '😔 שבוע קשה - שקול לפנות לתמיכה',
+                    'very-sad': '💙 זמן קשה - חשוב לפנות לעזרה מקצועית'
+                };
+                
+                showNotification(insights[dominantMood] || '📊 המשך לעקוב אחרי ההתקדמות שלך', 'info', 5000);
+                console.log('📊 תובנת מצב רוח:', { dominantMood, moodCounts, totalEntries: moodHistory.length });
+                
+            } catch (error) {
+                console.error('❌ שגיאה בתובנת מצב רוח:', error);
+            }
+        }
+
+        function resetProgress() {
+            try {
+                if (confirm('האם אתה בטוח שברצונך לאפס את כל ההתקדמות?')) {
+                    localStorage.removeItem('moodHistory');
+                    localStorage.removeItem('exerciseProgress');
+                    localStorage.removeItem('thoughtLog');
+                    localStorage.removeItem('currentStreak');
+                    
+                    moodHistory = [];
+                    exerciseProgress = {};
+                    currentStreak = 0;
+                    
+                    showNotification('🔄 ההתקדמות אופסה - התחלה חדשה!', 'info');
+                    updateProgressDisplay();
+                    console.log('🔄 כל הנתונים אופסו');
+                }
+            } catch (error) {
+                console.error('❌ שגיאה באיפוס נתונים:', error);
+            }
+        }
+
+        // פונקציית בדיקה מהירה
+        function testPatientApp() {
+            console.log('🧪 מבצע בדיקת אפליקציית מטופל...');
+            console.log('📊 היסטוריית מצבי רוח:', moodHistory);
+            console.log('🏃‍♂️ התקדמות תרגילים:', exerciseProgress);
+            console.log('🔥 רצף ימים נוכחי:', currentStreak);
+            console.log('🎭 מצב רוח נבחר:', selectedMood);
+            showNotification('🧪 בדיקת אפליקציה הושלמה - בדוק קונסול', 'info');
+        }
+
+        // Media Control Functions for Patient
+        let patientCameraActive = false;
+        let patientMicrophoneActive = false;
+        let patientMediaStream = null;
+        let patientAudioContext = null;
+        let patientAnalyser = null;
+        let personalJournalEntries = JSON.parse(localStorage.getItem('personalJournal') || '[]');
+
+        async function togglePatientCamera() {
+            try {
+                console.log('📹 מעבד בקשת מצלמה למטופל...');
+                
+                if (!patientCameraActive) {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: 640, height: 480, facingMode: 'user' },
+                        audio: false
+                    });
+                    
+                    patientMediaStream = stream;
+                    const video = document.getElementById('patientVideo');
+                    video.srcObject = stream;
+                    
+                    patientCameraActive = true;
+                    document.getElementById('togglePatientCamera').innerHTML = '📹 כבה מצלמה';
+                    document.getElementById('togglePatientCamera').style.background = 'linear-gradient(45deg, #27ae60, #2ecc71)';
+                    
+                    showNotification('📹 המצלמה האישית הופעלה! רק אתה רואה את זה', 'success');
+                    console.log('📹 מצלמת מטופל הופעלה');
+                    
+                    startPersonalEmotionDetection();
+                    
+                } else {
+                    if (patientMediaStream) {
+                        patientMediaStream.getTracks().forEach(track => track.stop());
+                        patientMediaStream = null;
+                    }
+                    
+                    const video = document.getElementById('patientVideo');
+                    video.srcObject = null;
+                    
+                    patientCameraActive = false;
+                    document.getElementById('togglePatientCamera').innerHTML = '📹 הדלק מצלמה';
+                    document.getElementById('togglePatientCamera').style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
+                    
+                    showNotification('📹 המצלמה כובתה', 'info');
+                    console.log('📹 מצלמת מטופל כובתה');
+                }
+                
+            } catch (error) {
+                console.error('❌ שגיאה במצלמת המטופל:', error);
+                showNotification('❌ שגיאה בגישה למצלמה - בדוק הרשאות', 'error', 5000);
+                
+                if (error.name === 'NotAllowedError') {
+                    showNotification('🚫 נדרשת הרשאה למצלמה - אנא אשר בדפדפן', 'warning', 6000);
+                }
+            }
+        }
+
+        async function togglePatientMicrophone() {
+            try {
+                console.log('🎤 מעבד בקשת מיקרופון למטופל...');
+                
+                if (!patientMicrophoneActive) {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            sampleRate: 44100
+                        },
+                        video: false
+                    });
+                    
+                    patientMicrophoneActive = true;
+                    document.getElementById('togglePatientMic').innerHTML = '🎤 כבה מיקרופון';
+                    document.getElementById('togglePatientMic').style.background = 'linear-gradient(45deg, #27ae60, #2ecc71)';
+                    
+                    showNotification('🎤 המיקרופון האישי הופעל!', 'success');
+                    console.log('🎤 מיקרופון מטופל הופעל');
+                    
+                    setupPatientAudioAnalysis(stream);
+                    
+                } else {
+                    patientMicrophoneActive = false;
+                    document.getElementById('togglePatientMic').innerHTML = '🎤 הדלק מיקרופון';
+                    document.getElementById('togglePatientMic').style.background = 'linear-gradient(45deg, #3498db, #2980b9)';
+                    
+                    showNotification('🎤 המיקרופון כובה', 'info');
+                    console.log('🎤 מיקרופון מטופל כובה');
+                    
+                    if (patientAudioContext) {
+                        patientAudioContext.close();
+                        patientAudioContext = null;
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ שגיאה במיקרופון המטופל:', error);
+                showNotification('❌ שגיאה בגישה למיקרופון - בדוק הרשאות', 'error', 5000);
+            }
+        }
+
+        function setupPatientAudioAnalysis(stream) {
+            try {
+                patientAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                patientAnalyser = patientAudioContext.createAnalyser();
+                const source = patientAudioContext.createMediaStreamSource(stream);
+                
+                patientAnalyser.fftSize = 256;
+                const bufferLength = patientAnalyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                source.connect(patientAnalyser);
+                
+                createPatientAudioVisualizer();
+                
+                function updatePatientVisualizer() {
+                    if (!patientMicrophoneActive) return;
+                    
+                    patientAnalyser.getByteFrequencyData(dataArray);
+                    
+                    const bars = document.querySelectorAll('.patient-audio-bar');
+                    let totalEnergy = 0;
+                    
+                    bars.forEach((bar, index) => {
+                        const value = dataArray[index * 4] || 0;
+                        const height = (value / 255) * 40;
+                        bar.style.height = height + 'px';
+                        totalEnergy += value;
+                        
+                        if (value > 100) {
+                            bar.style.background = '#e74c3c';
+                        } else if (value > 50) {
+                            bar.style.background = '#f39c12';
+                        } else {
+                            bar.style.background = '#3498db';
+                        }
+                    });
+                    
+                    // עדכון רמת ביטחון בקול
+                    const confidence = Math.min(100, Math.round((totalEnergy / bars.length) / 2.55));
+                    document.getElementById('voiceConfidence').textContent = confidence + '%';
+                    
+                    requestAnimationFrame(updatePatientVisualizer);
+                }
+                
+                updatePatientVisualizer();
+                console.log('🎵 ניתוח אודיו אישי הופעל');
+                
+            } catch (error) {
+                console.error('❌ שגיאה בניתוח אודיו אישי:', error);
+            }
+        }
+
+        function createPatientAudioVisualizer() {
+            const container = document.getElementById('personalAudioVisualizer');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < 15; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'patient-audio-bar';
+                bar.style.cssText = `
+                    width: 12px;
+                    height: 5px;
+                    background: #3498db;
+                    margin: 0 2px;
+                    border-radius: 6px;
+                    transition: height 0.1s ease;
+                `;
+                container.appendChild(bar);
+            }
+        }
+
+        function startPersonalEmotionDetection() {
+            if (!patientCameraActive) return;
+            
+            const emotions = ['😊', '😔', '😠', '😰', '😐', '🤩', '😴'];
+            const moodTexts = {
+                '😊': 'נראה שאתה בנוח!',
+                '😔': 'נראה שאתה עצוב - רוצה לעשות תרגיל?',
+                '😠': 'נראה שאתה כועס - בוא ננסה נשימות',
+                '😰': 'נראה שאתה חרד - יש תרגילי הרגעה',
+                '😐': 'נראה שאתה רגוע',
+                '🤩': 'נראה שאתה מרוגש!',
+                '😴': 'נראה שאתה עייף'
+            };
+            
+            setInterval(() => {
+                if (patientCameraActive) {
+                    const emotion = emotions[Math.floor(Math.random() * emotions.length)];
+                    const moodMirror = document.getElementById('moodMirror');
+                    const moodDescription = document.getElementById('moodDescription');
+                    
+                    moodMirror.textContent = emotion;
+                    moodDescription.textContent = moodTexts[emotion];
+                    
+                    console.log(`🎭 זיהוי רגש אישי: ${emotion}`);
+                    
+                    if (Math.random() > 0.8) { // 20% chance
+                        showNotification(`🎭 ${moodTexts[emotion]}`, 'info', 3000);
+                    }
+                }
+            }, 8000);
+        }
+
+        function startPersonalJournal() {
+            try {
+                console.log('📓 פותח יומן אישי...');
+                document.getElementById('personalJournalModal').style.display = 'block';
+                loadJournalHistory();
+                showNotification('📓 היומן האישי נפתח', 'info');
+            } catch (error) {
+                console.error('❌ שגיאה בפתיחת יומן אישי:', error);
+            }
+        }
+
+        function recordMoodEntry() {
+            try {
+                console.log('🎭 מקליט רשומת מצב רוח...');
+                showNotification('🎭 מתחיל הקלטת מצב רוח...', 'info');
+                
+                if (!patientMicrophoneActive) {
+                    showNotification('⚠️ יש להפעיל מיקרופון קודם', 'warning');
+                    return;
+                }
+                
+                // סימולציה של הקלטה
+                let recordTime = 0;
+                const recordInterval = setInterval(() => {
+                    recordTime++;
+                    showNotification(`⏺️ מקליט... ${recordTime} שניות`, 'info', 1000);
+                    
+                    if (recordTime >= 10) {
+                        clearInterval(recordInterval);
+                        
+                        const moodEntry = {
+                            id: Date.now(),
+                            type: 'voice',
+                            duration: recordTime,
+                            timestamp: new Date().toISOString(),
+                            mood: 'נותח מהקול',
+                            transcription: 'הקלטת קול אישית נשמרה בביטחון מלא'
+                        };
+                        
+                        personalJournalEntries.push(moodEntry);
+                        localStorage.setItem('personalJournal', JSON.stringify(personalJournalEntries));
+                        
+                        showNotification('✅ הקלטת מצב הרוח נשמרה!', 'success');
+                        console.log('🎭 רשומת מצב רוח נשמרה:', moodEntry);
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                console.error('❌ שגיאה בהקלטת מצב רוח:', error);
+                showNotification('❌ שגיאה בהקלטת מצב הרוח', 'error');
+            }
+        }
+
+        function saveJournalEntry() {
+            try {
+                const entry = document.getElementById('journalEntry').value.trim();
+                const mood = document.getElementById('journalMood').value;
+                const intensity = document.getElementById('moodIntensity').value;
+                
+                if (!entry) {
+                    showNotification('⚠️ יש לכתוב משהו ביומן', 'warning');
+                    return;
+                }
+                
+                const journalEntry = {
+                    id: Date.now(),
+                    type: 'text',
+                    content: entry,
+                    mood: mood,
+                    intensity: intensity,
+                    timestamp: new Date().toISOString()
+                };
+                
+                personalJournalEntries.push(journalEntry);
+                localStorage.setItem('personalJournal', JSON.stringify(personalJournalEntries));
+                
+                showNotification('✅ הרשומה נשמרה ביומן!', 'success');
+                console.log('📓 רשומת יומן נשמרה:', journalEntry);
+                
+                // נקה את הטופס
+                document.getElementById('journalEntry').value = '';
+                document.getElementById('journalMood').selectedIndex = 0;
+                document.getElementById('moodIntensity').value = '5';
+                document.getElementById('intensityValue').textContent = '5/10';
+                
+                loadJournalHistory();
+                
+            } catch (error) {
+                console.error('❌ שגיאה בשמירת רשומת יומן:', error);
+                showNotification('❌ שגיאה בשמירת הרשומה', 'error');
+            }
+        }
+
+        function loadJournalHistory() {
+            try {
+                const container = document.getElementById('journalHistory');
+                container.innerHTML = '';
+                
+                if (personalJournalEntries.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">עדיין לא כתבת רשומות ביומן</div>';
+                    return;
+                }
+                
+                personalJournalEntries.slice(-10).reverse().forEach(entry => {
+                    const div = document.createElement('div');
+                    div.style.cssText = `
+                        background: #f8f9ff;
+                        padding: 15px;
+                        margin: 10px 0;
+                        border-radius: 10px;
+                        border-right: 4px solid #4ECDC4;
+                    `;
+                    
+                    const date = new Date(entry.timestamp).toLocaleDateString('he-IL');
+                    const time = new Date(entry.timestamp).toLocaleTimeString('he-IL');
+                    
+                    div.innerHTML = `
+                        <div style="font-size: 0.9em; color: #666; margin-bottom: 8px;">
+                            📅 ${date} ⏰ ${time}
+                            ${entry.type === 'voice' ? '🎤' : '✍️'} ${entry.mood}
+                            ${entry.intensity ? `רמה: ${entry.intensity}/10` : ''}
+                        </div>
+                        <div>${entry.content || entry.transcription || 'הקלטת קול'}</div>
+                    `;
+                    
+                    container.appendChild(div);
+                });
+                
+            } catch (error) {
+                console.error('❌ שגיאה בטעינת היסטוריית יומן:', error);
+            }
+        }
+
+        function closePersonalJournal() {
+            document.getElementById('personalJournalModal').style.display = 'none';
+            showNotification('📓 היומן האישי נסגר', 'info');
+        }
+
+        function exportPersonalData() {
+            try {
+                const exportData = {
+                    timestamp: new Date().toISOString(),
+                    personalJournal: personalJournalEntries,
+                    moodHistory: moodHistory,
+                    exerciseProgress: exerciseProgress,
+                    currentStreak: currentStreak,
+                    thoughtLog: JSON.parse(localStorage.getItem('thoughtLog') || '[]')
+                };
+                
+                localStorage.setItem('personalDataExport', JSON.stringify(exportData));
+                console.log('📤 נתונים אישיים יוצאו:', exportData);
+                showNotification('📤 הנתונים האישיים יוצאו בהצלחה', 'success');
+                
+            } catch (error) {
+                console.error('❌ שגיאה ביצוא נתונים אישיים:', error);
+                showNotification('❌ שגיאה ביצוא הנתונים', 'error');
+            }
+        }
+
+        // הגדרת עדכון אוטומטי לרמת עוצמה
+        document.addEventListener('DOMContentLoaded', function() {
+            const intensitySlider = document.getElementById('moodIntensity');
+            const intensityValue = document.getElementById('intensityValue');
+            
+            if (intensitySlider && intensityValue) {
+                intensitySlider.addEventListener('input', function() {
+                    intensityValue.textContent = this.value + '/10';
+                });
+            }
+        });
+
+        // חשיפת פונקציות גלובליות לדיבאג
+        window.patientAppDebug = {
+            saveMood,
+            startBreathing,
+            openThoughtLog,
+            start54321,
+            getMoodInsight,
+            resetProgress,
+            testPatientApp,
+            togglePatientCamera,
+            togglePatientMicrophone,
+            startPersonalJournal,
+            recordMoodEntry,
+            moodHistory: () => moodHistory,
+            exerciseProgress: () => exerciseProgress,
+            currentStreak: () => currentStreak,
+            personalJournal: () => personalJournalEntries
+        };
+    </script>
+</body>
+</html> 

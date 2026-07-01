@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeCheck Pro Max - זיהוי רגשות מתקדם</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm/dist/tf-backend-wasm.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-accent: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --gradient-warning: linear-gradient(135deg, #fdbb2d 0%, #22c1c3 100%);
+            --glass-bg: rgba(255, 255, 255, 0.12);
+            --glass-border: rgba(255, 255, 255, 0.25);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.85);
+            --shadow-glow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            --border-radius: 16px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'SF Pro Display', sans-serif;
+            background: var(--gradient-primary);
+            min-height: 100vh;
+            padding: 15px;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Advanced Header */
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 3.2em;
+            font-weight: 900;
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FF69B4, #00f2fe, #667eea);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            animation: logoFlow 4s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+
+        @keyframes logoFlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .tagline {
+            font-size: 1.1em;
+            font-weight: 600;
+            opacity: 0.95;
+            margin-bottom: 10px;
+        }
+
+        .version-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--gradient-accent);
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.85em;
+            font-weight: 700;
+            animation: versionPulse 3s ease-in-out infinite;
+            box-shadow: 0 4px 20px rgba(245, 87, 108, 0.4);
+        }
+
+        @keyframes versionPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 20px rgba(245, 87, 108, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 6px 30px rgba(245, 87, 108, 0.6); }
+        }
+
+        /* Glass Cards with Enhanced Effects */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 18px;
+            box-shadow: var(--shadow-glow);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .glass-card:hover::before {
+            left: 100%;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.5);
+        }
+
+        /* Advanced Status Panel */
+        .status-panel {
+            position: relative;
+            text-align: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .status-text {
+            font-weight: 600;
+            font-size: 1.15em;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .status.loading { color: #fdbb2d; }
+        .status.ready { color: #38ef7d; }
+        .status.error { color: #ff6b6b; }
+        .status.analyzing { 
+            color: #00f2fe; 
+            animation: analyzeGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes analyzeGlow {
+            from { text-shadow: 0 0 10px rgba(0, 242, 254, 0.5); }
+            to { text-shadow: 0 0 20px rgba(0, 242, 254, 0.8); }
+        }
+
+        .progress-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0%;
+            position: relative;
+        }
+
+        .progress-fill.face { background: var(--gradient-success); }
+        .progress-fill.voice { background: var(--gradient-warning); }
+        .progress-fill.pose { background: var(--gradient-accent); }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: progressShimmer 2s infinite;
+        }
+
+        @keyframes progressShimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* Enhanced Camera Section */
+        .camera-container {
+            position: relative;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+            margin-bottom: 18px;
+        }
+
+        #video {
+            width: 100%;
+            height: 320px;
+            object-fit: cover;
+            display: block;
+        }
+
+        #canvas, #poseCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(0, 242, 254, 0.08) 50%, transparent 70%);
+            pointer-events: none;
+            opacity: 0;
+            animation: scanPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes scanPulse {
+            0%, 100% { opacity: 0; transform: translateX(-100%) rotateZ(45deg); }
+            50% { opacity: 1; transform: translateX(100%) rotateZ(45deg); }
+        }
+
+        /* Multi-Modal Controls */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 18px;
+        }
+
+        .btn {
+            padding: 18px 24px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--gradient-success);
+            color: white;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: var(--gradient-accent);
+            font-size: 1.15em;
+            padding: 20px 24px;
+        }
+
+        .btn-multi-modal {
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c);
+            background-size: 300% 300%;
+            animation: multiModalFlow 3s ease infinite;
+        }
+
+        @keyframes multiModalFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Advanced Analysis Display */
+        .analysis-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 18px;
+        }
+
+        .emotion-display {
+            grid-column: span 2;
+            position: relative;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .emotion-sphere {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), rgba(0, 242, 254, 0.2));
+            border: 3px solid rgba(0, 242, 254, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: emotionFloat 6s ease-in-out infinite;
+            box-shadow: 0 0 40px rgba(0, 242, 254, 0.4);
+        }
+
+        @keyframes emotionFloat {
+            0%, 100% { transform: translateY(0px) rotateY(0deg); }
+            50% { transform: translateY(-15px) rotateY(180deg); }
+        }
+
+        .current-emoji {
+            font-size: 4.5em;
+            animation: emojiPulse 3s ease-in-out infinite;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes emojiPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Multi-Modal Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(15px);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .metric-card:hover::before {
+            opacity: 1;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(0, 242, 254, 0.4);
+        }
+
+        .metric-value {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #00f2fe;
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.85;
+            font-weight: 500;
+        }
+
+        /* Voice Analysis Visualizer */
+        .voice-visualizer {
+            height: 80px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .voice-wave {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 100%;
+        }
+
+        .voice-bar {
+            width: 4px;
+            background: var(--gradient-warning);
+            border-radius: 2px;
+            animation: voicePulse 0.8s ease-in-out infinite alternate;
+            transform-origin: bottom;
+        }
+
+        .voice-bar:nth-child(2n) { animation-delay: 0.1s; }
+        .voice-bar:nth-child(3n) { animation-delay: 0.2s; }
+        .voice-bar:nth-child(4n) { animation-delay: 0.3s; }
+
+        @keyframes voicePulse {
+            from { height: 20%; }
+            to { height: 80%; }
+        }
+
+        /* Enhanced Social Battery */
+        .social-battery {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .battery-title {
+            color: #FFD700;
+            font-weight: 800;
+            font-size: 1.1em;
+            margin-bottom: 18px;
+            text-align: center;
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        .battery-container {
+            position: relative;
+            background: #1a1a1a;
+            border-radius: 30px;
+            height: 50px;
+            border: 3px solid #333;
+            overflow: hidden;
+            margin-bottom: 18px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .battery-fill {
+            height: 100%;
+            border-radius: 27px;
+            transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(90deg, #DC3545 0%, #FFC107 40%, #28A745 100%);
+            width: 50%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .battery-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: batteryShimmer 3s infinite;
+        }
+
+        @keyframes batteryShimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .battery-emojis {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            transform: translateY(-50%);
+            display: flex;
+            justify-content: space-between;
+            padding: 0 15px;
+            font-size: 1.4em;
+            z-index: 3;
+        }
+
+        .battery-tip {
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 22px;
+            background: #333;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .mood-text {
+            text-align: center;
+            font-size: 1em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-top: 12px;
+            min-height: 25px;
+        }
+
+        /* Advanced Text Area */
+        .text-area {
+            width: 100%;
+            min-height: 120px;
+            padding: 20px;
+            border: 2px solid var(--glass-border);
+            border-radius: 15px;
+            font-size: 1.05em;
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--text-primary);
+            resize: vertical;
+            direction: rtl;
+            backdrop-filter: blur(15px);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .text-area:focus {
+            outline: none;
+            border-color: #00f2fe;
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+        }
+
+        .text-area::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* Enhanced Sharing */
+        .share-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .share-btn {
+            padding: 14px 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+        }
+
+        .share-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Floating Particles Enhancement */
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            font-size: 1.5em;
+            opacity: 0.7;
+            animation: particleFloat 12s ease-in-out infinite;
+        }
+
+        @keyframes particleFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.7; }
+            25% { transform: translateY(-40px) rotate(90deg); opacity: 0.9; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 0.5; }
+            75% { transform: translateY(-35px) rotate(270deg); opacity: 0.8; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .app-container {
+                padding: 0 10px;
+            }
+            
+            .logo {
+                font-size: 2.8em;
+            }
+            
+            #video {
+                height: 280px;
+            }
+            
+            .analysis-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .emotion-sphere {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .current-emoji {
+                font-size: 4em;
+            }
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-particles" id="particles"></div>
+    
+    <div class="app-container">
+        <!-- Enhanced Header -->
+        <div class="header">
+            <div class="logo">VibeCheck Pro Max</div>
+            <div class="tagline">מערכת זיהוי רגשות מולטי-מודאלית מתקדמת</div>
+            <div class="version-badge">
+                <span>🚀</span>
+                <span>AI POWERED 2025</span>
+            </div>
+        </div>
+        
+        <!-- Advanced Status Panel -->
+        <div class="glass-card">
+            <div class="status-panel">
+                <div id="status" class="status loading">
+                    <div class="status-text">מאתחל מערכת AI מולטי-מודאלית...</div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill face" id="faceProgress"></div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill voice" id="voiceProgress"></div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill pose" id="poseProgress"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Enhanced Camera Section -->
+        <div class="glass-card">
+            <div class="camera-container">
+                <video id="video" autoplay muted playsinline></video>
+                <canvas id="canvas"></canvas>
+                <canvas id="poseCanvas"></canvas>
+                <div class="camera-overlay"></div>
+            </div>
+        </div>
+        
+        <!-- Multi-Modal Controls -->
+        <div class="glass-card">
+            <div class="controls-grid">
+                <button id="startBtn" class="btn btn-primary" disabled>
+                    🎥 הפעל מערכת מולטי-מודאלית
+                </button>
+                <button id="analyzeBtn" class="btn" disabled>
+                    🧠 נתח רגשות מתקדם
+                </button>
+                <button id="continuousBtn" class="btn btn-multi-modal" disabled>
+                    🔄 מצב ניטור רציף מתקדם
+                </button>
+            </div>
+        </div>
+
+        <!-- Voice Analysis Visualizer -->
+        <div class="glass-card">
+            <h3 style="color: #fdbb2d; margin-bottom: 15px; text-align: center;">🎤 ניתוח טון קולי</h3>
+            <div class="voice-visualizer">
+                <div class="voice-wave" id="voiceWave">
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                    <div class="voice-bar"></div>
+                </div>
+            </div>
+            <button id="voiceBtn" class="btn" style="background: var(--gradient-warning);">
+                🎤 הפעל ניתוח קולי
+            </button>
+        </div>
+
+        <!-- Enhanced Emotion Display -->
+        <div class="glass-card">
+            <div class="emotion-display">
+                <div class="emotion-sphere">
+                    <div class="current-emoji" id="currentEmoji">🤔</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multi-Modal Analysis Metrics -->
+        <div class="glass-card">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="faceEmotion">--</div>
+                    <div class="metric-label">הבעת פנים</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="voiceEmotion">--</div>
+                    <div class="metric-label">טון קולי</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="poseEmotion">--</div>
+                    <div class="metric-label">שפת גוף</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="combinedConfidence">--</div>
+                    <div class="metric-label">דיוק משולב</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="stressLevel">--</div>
+                    <div class="metric-label">רמת לחץ</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="authenticityScore">--</div>
+                    <div class="metric-label">ציון אמינות</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Social Battery -->
+        <div class="glass-card">
+            <div class="social-battery">
+                <div class="battery-title">🔋 EMOTIONAL ENERGY LEVEL</div>
+                <div class="battery-container">
+                    <div class="battery-fill" id="batteryFill"></div>
+                    <div class="battery-emojis">
+                        <span>😩</span>
+                        <span>😕</span>
+                        <span>😐</span>
+                        <span>🙂</span>
+                        <span>😃</span>
+                        <span>😄</span>
+                    </div>
+                    <div class="battery-tip"></div>
+                </div>
+                <div class="mood-text" id="moodDisplay">מחכה לניתוח מולטי-מודאלי...</div>
+            </div>
+        </div>
+
+        <!-- Enhanced Text Area and Sharing -->
+        <div class="glass-card">
+            <textarea id="textArea" class="text-area" placeholder="הטקסט שלך עם האימוג'ים המתאימים יופיע כאן... מערכת AI מתקדמת מנתחת פנים + קול + שפת גוף 🎭🎤🤸‍♂️"></textarea>
+            
+            <div class="share-grid">
+                <button class="share-btn" onclick="shareToWhatsApp()">
+                    💬 WhatsApp
+                </button>
+                <button class="share-btn" onclick="shareToInstagram()">
+                    📸 Instagram
+                </button>
+                <button class="share-btn" onclick="copyToClipboard()">
+                    📋 העתק
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class VibeCheckProMax {
+            constructor() {
+                this.initializeElements();
+                this.initializeState();
+                this.initializeEmotionDatabase();
+                this.initializeAI();
+                this.setupEventListeners();
+                this.createFloatingParticles();
+                this.startInitialization();
+            }
+
+            initializeElements() {
+                this.video = document.getElementById('video');
+                this.canvas = document.getElementById('canvas');
+                this.poseCanvas = document.getElementById('poseCanvas');
+                this.startBtn = document.getElementById('startBtn');
+                this.analyzeBtn = document.getElementById('analyzeBtn');
+                this.continuousBtn = document.getElementById('continuousBtn');
+                this.voiceBtn = document.getElementById('voiceBtn');
+                this.statusElement = document.getElementById('status');
+                this.textArea = document.getElementById('textArea');
+                this.currentEmoji = document.getElementById('currentEmoji');
+                this.batteryFill = document.getElementById('batteryFill');
+                this.moodDisplay = document.getElementById('moodDisplay');
+                
+                // Progress bars
+                this.faceProgress = document.getElementById('faceProgress');
+                this.voiceProgress = document.getElementById('voiceProgress');
+                this.poseProgress = document.getElementById('poseProgress');
+                
+                // Metric displays
+                this.faceEmotion = document.getElementById('faceEmotion');
+                this.voiceEmotion = document.getElementById('voiceEmotion');
+                this.poseEmotion = document.getElementById('poseEmotion');
+                this.combinedConfidence = document.getElementById('combinedConfidence');
+                this.stressLevel = document.getElementById('stressLevel');
+                this.authenticityScore = document.getElementById('authenticityScore');
+                this.voiceWave = document.getElementById('voiceWave');
+            }
+
+            initializeState() {
+                this.faceMesh = null;
+                this.pose = null;
+                this.audioContext = null;
+                this.audioAnalyser = null;
+                this.emotionModel = null;
+                this.isInitialized = false;
+                this.isContinuousMode = false;
+                this.isVoiceAnalysisActive = false;
+                this.currentAnalysis = {
+                    face: { emotion: 'neutral', confidence: 0 },
+                    voice: { emotion: 'neutral', confidence: 0, pitch: 0, intensity: 0 },
+                    pose: { emotion: 'neutral', confidence: 0, posture: 'upright' },
+                    combined: { emotion: 'neutral', confidence: 0, stress: 0, authenticity: 0 }
+                };
+                this.analysisHistory = [];
+                this.previousLandmarks = null;
+                this.audioDataArray = null;
+            }
+
+            initializeEmotionDatabase() {
+                this.emotions = {
+                    happy: { 
+                        emoji: '😊', 
+                        hebrew: 'שמח', 
+                        color: '#28A745',
+                        messages: ['אתה נראה מאושר!', 'השמחה זורחת ממך!', 'אנרגיה חיובית מדהימה!'] 
+                    },
+                    sad: { 
+                        emoji: '😢', 
+                        hebrew: 'עצוב', 
+                        color: '#6C757D',
+                        messages: ['זה בסדר להרגיש ככה', 'הרגשות עוברים', 'אתה לא לבד'] 
+                    },
+                    angry: { 
+                        emoji: '😠', 
+                        hebrew: 'כועס', 
+                        color: '#DC3545',
+                        messages: ['נשמה עמוק', 'הכעס יעבור', 'מה גורם לך להרגיש ככה?'] 
+                    },
+                    surprised: { 
+                        emoji: '😮', 
+                        hebrew: 'מופתע', 
+                        color: '#FFC107',
+                        messages: ['וואו!', 'מה קרה פה?', 'מפתיע לחיוב!'] 
+                    },
+                    fearful: { 
+                        emoji: '😨', 
+                        hebrew: 'חרד', 
+                        color: '#17A2B8',
+                        messages: ['הכל יהיה בסדר', 'נשמה לאט', 'אתה בטוח כאן'] 
+                    },
+                    disgusted: { 
+                        emoji: '🤢', 
+                        hebrew: 'סלידה', 
+                        color: '#6F42C1',
+                        messages: ['מה מציק לך?', 'זה יעבור', 'בוא נשנה נושא'] 
+                    },
+                    neutral: { 
+                        emoji: '😐', 
+                        hebrew: 'ניטרלי', 
+                        color: '#6C757D',
+                        messages: ['שלווה פנימית', 'רגוע ושקט', 'מצב מאוזן'] 
+                    },
+                    contempt: { 
+                        emoji: '😏', 
+                        hebrew: 'בוז', 
+                        color: '#E83E8C',
+                        messages: ['מעניין...', 'יש לך דעה חזקה', 'בטוח בעצמך'] 
+                    },
+                    excited: { 
+                        emoji: '🤩', 
+                        hebrew: 'נרגש', 
+                        color: '#FF6B35',
+                        messages: ['האנרגיה שלך מדבקת!', 'התרגשות מטורפת!', 'זה מדהים!'] 
+                    },
+                    stressed: { 
+                        emoji: '😰', 
+                        hebrew: 'לחוץ', 
+                        color: '#FD7E14',
+                        messages: ['הכל יסתדר', 'צעד אחד בכל פעם', 'אתה מתמודד נהדר'] 
+                    }
+                };
+
+                this.voiceEmotions = {
+                    calm: { hebrew: 'רגוע', emoji: '😌' },
+                    excited: { hebrew: 'נרגש', emoji: '🤩' },
+                    tense: { hebrew: 'מתוח', emoji: '😬' },
+                    sad: { hebrew: 'עצוב', emoji: '😢' },
+                    energetic: { hebrew: 'אנרגטי', emoji: '⚡' }
+                };
+
+                this.poseEmotions = {
+                    confident: { hebrew: 'בטוח בעצמו', emoji: '💪' },
+                    relaxed: { hebrew: 'רגוע', emoji: '🧘' },
+                    defensive: { hebrew: 'מגונן', emoji: '🛡️' },
+                    open: { hebrew: 'פתוח', emoji: '🤗' },
+                    withdrawn: { hebrew: 'מסוגר', emoji: '🤐' }
+                };
+            }
+
+            async initializeAI() {
+                try {
+                    // Initialize MediaPipe FaceMesh
+                    this.faceMesh = new FaceMesh({
+                        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
+                    });
+                    this.faceMesh.setOptions({
+                        maxNumFaces: 1,
+                        refineLandmarks: true,
+                        minDetectionConfidence: 0.6,
+                        minTrackingConfidence: 0.6,
+                    });
+                    this.faceMesh.onResults(this.handleFaceResults.bind(this));
+
+                    // Initialize MediaPipe Pose
+                    this.pose = new Pose({
+                        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
+                    });
+                    this.pose.setOptions({
+                        modelComplexity: 1,
+                        smoothLandmarks: true,
+                        minDetectionConfidence: 0.5,
+                        minTrackingConfidence: 0.5,
+                    });
+                    this.pose.onResults(this.handlePoseResults.bind(this));
+
+                    // Initialize TensorFlow.js with WASM backend
+                    await tf.setBackend('wasm');
+                    await tf.ready();
+                    
+                    this.updateStatus('AI מולטי-מודאלי מוכן לפעולה! 🚀', 'ready', 100);
+                    this.isInitialized = true;
+                    this.startBtn.disabled = false;
+                    
+                } catch (error) {
+                    console.error('שגיאה באתחול AI:', error);
+                    this.updateStatus('שגיאה באתחול מערכת AI', 'error', 0);
+                }
+            }
+
+            async startInitialization() {
+                const steps = [
+                    { name: 'טוען MediaPipe FaceMesh...', progress: 25 },
+                    { name: 'טוען MediaPipe Pose...', progress: 50 },
+                    { name: 'מאתחל TensorFlow.js...', progress: 75 },
+                    { name: 'מוכן לפעולה!', progress: 100 }
+                ];
+
+                for (let i = 0; i < steps.length; i++) {
+                    this.updateStatus(steps[i].name, 'loading', steps[i].progress);
+                    this.faceProgress.style.width = Math.min(steps[i].progress, 100) + '%';
+                    this.voiceProgress.style.width = Math.min(steps[i].progress - 20, 100) + '%';
+                    this.poseProgress.style.width = Math.min(steps[i].progress - 40, 100) + '%';
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                }
+            }
+
+            setupEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startCamera());
+                this.analyzeBtn.addEventListener('click', () => this.analyzeCurrentFrame());
+                this.continuousBtn.addEventListener('click', () => this.toggleContinuousMode());
+                this.voiceBtn.addEventListener('click', () => this.toggleVoiceAnalysis());
+                this.textArea.addEventListener('input', () => this.analyzeText());
+            }
+
+            async startCamera() {
+                try {
+                    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                    const constraints = {
+                        video: {
+                            width: { ideal: isMobile ? 640 : 1280 },
+                            height: { ideal: isMobile ? 480 : 720 },
+                            frameRate: { ideal: isMobile ? 15 : 30 },
+                            facingMode: 'user'
+                        }
+                    };
+
+                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    this.video.srcObject = stream;
+                    
+                    this.video.onloadedmetadata = () => {
+                        this.canvas.width = this.video.videoWidth;
+                        this.canvas.height = this.video.videoHeight;
+                        this.poseCanvas.width = this.video.videoWidth;
+                        this.poseCanvas.height = this.video.videoHeight;
+                        this.analyzeBtn.disabled = false;
+                        this.continuousBtn.disabled = false;
+                    };
+
+                    this.updateStatus('מצלמה פעילה - מוכן לניתוח! 📹', 'ready', 100);
+                    this.startBtn.textContent = '✅ מצלמה פעילה';
+                    this.startBtn.disabled = true;
+                    
+                } catch (error) {
+                    console.error('שגיאה בהפעלת מצלמה:', error);
+                    this.updateStatus('שגיאה בגישה למצלמה - בדוק הרשאות', 'error', 0);
+                }
+            }
+
+            async toggleVoiceAnalysis() {
+                if (!this.isVoiceAnalysisActive) {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        this.audioContext = new AudioContext();
+                        const source = this.audioContext.createMediaStreamSource(stream);
+                        this.audioAnalyser = this.audioContext.createAnalyser();
+                        this.audioAnalyser.fftSize = 2048;
+                        source.connect(this.audioAnalyser);
+                        
+                        this.audioDataArray = new Uint8Array(this.audioAnalyser.frequencyBinCount);
+                        this.isVoiceAnalysisActive = true;
+                        this.voiceBtn.textContent = '🔴 עוצר ניתוח קולי';
+                        this.startVoiceVisualization();
+                        this.updateStatus('ניתוח קולי פעיל! 🎤', 'analyzing', 80);
+                        
+                    } catch (error) {
+                        console.error('שגיאה בהפעלת מיקרופון:', error);
+                        this.updateStatus('שגיאה בגישה למיקרופון', 'error', 0);
+                    }
+                } else {
+                    this.isVoiceAnalysisActive = false;
+                    if (this.audioContext) {
+                        this.audioContext.close();
+                    }
+                    this.voiceBtn.textContent = '🎤 הפעל ניתוח קולי';
+                    this.updateStatus('ניתוח קולי נעצר', 'ready', 60);
+                }
+            }
+
+            startVoiceVisualization() {
+                const visualize = () => {
+                    if (!this.isVoiceAnalysisActive) return;
+                    
+                    this.audioAnalyser.getByteFrequencyData(this.audioDataArray);
+                    const bars = this.voiceWave.children;
+                    
+                    for (let i = 0; i < bars.length; i++) {
+                        const barHeight = (this.audioDataArray[i * 10] / 255) * 100;
+                        bars[i].style.height = Math.max(barHeight, 20) + '%';
+                    }
+                    
+                    // Analyze voice emotion
+                    this.analyzeVoiceEmotion();
+                    requestAnimationFrame(visualize);
+                };
+                visualize();
+            }
+
+            analyzeVoiceEmotion() {
+                if (!this.audioDataArray) return;
+                
+                const averageVolume = this.audioDataArray.reduce((sum, val) => sum + val, 0) / this.audioDataArray.length;
+                const maxFreq = Math.max(...this.audioDataArray);
+                const pitch = this.calculatePitch(this.audioDataArray);
+                
+                let voiceEmotion = 'calm';
+                let confidence = 0;
+                
+                if (averageVolume > 80 && maxFreq > 200) {
+                    voiceEmotion = 'excited';
+                    confidence = 0.85;
+                } else if (averageVolume > 60 && pitch > 150) {
+                    voiceEmotion = 'tense';
+                    confidence = 0.75;
+                } else if (averageVolume < 30) {
+                    voiceEmotion = 'sad';
+                    confidence = 0.6;
+                } else if (averageVolume > 50 && maxFreq > 100) {
+                    voiceEmotion = 'energetic';
+                    confidence = 0.7;
+                } else {
+                    voiceEmotion = 'calm';
+                    confidence = 0.5;
+                }
+                
+                this.currentAnalysis.voice = {
+                    emotion: voiceEmotion,
+                    confidence: confidence * 100,
+                    pitch: pitch,
+                    intensity: averageVolume
+                };
+                
+                this.updateVoiceDisplay();
+            }
+
+            calculatePitch(dataArray) {
+                let maxValue = 0;
+                let maxIndex = 0;
+                
+                for (let i = 0; i < dataArray.length; i++) {
+                    if (dataArray[i] > maxValue) {
+                        maxValue = dataArray[i];
+                        maxIndex = i;
+                    }
+                }
+                
+                const sampleRate = this.audioContext.sampleRate;
+                const pitch = (maxIndex * sampleRate) / (2 * dataArray.length);
+                return pitch;
+            }
+
+            async analyzeCurrentFrame() {
+                if (!this.video.srcObject) {
+                    this.updateStatus('הפעל מצלמה תחילה!', 'error', 0);
+                    return;
+                }
+
+                this.updateStatus('מנתח רגשות מולטי-מודאלי...', 'analyzing', 50);
+                
+                // Analyze face
+                await this.faceMesh.send({ image: this.video });
+                
+                // Analyze pose
+                await this.pose.send({ image: this.video });
+                
+                // Combine analysis after a short delay to ensure all modalities are processed
+                setTimeout(() => {
+                    this.combineMultiModalAnalysis();
+                }, 500);
+            }
+
+            async handleFaceResults(results) {
+                const ctx = this.canvas.getContext('2d');
+                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                    const landmarks = results.multiFaceLandmarks[0];
+                    this.drawFaceLandmarks(landmarks);
+                    
+                    // Analyze facial expression
+                    const faceAnalysis = this.analyzeFacialExpression(landmarks);
+                    this.currentAnalysis.face = faceAnalysis;
+                    this.updateFaceDisplay();
+                } else {
+                    this.currentAnalysis.face = { emotion: 'neutral', confidence: 0 };
+                }
+            }
+
+            async handlePoseResults(results) {
+                const ctx = this.poseCanvas.getContext('2d');
+                ctx.clearRect(0, 0, this.poseCanvas.width, this.poseCanvas.height);
+
+                if (results.poseLandmarks) {
+                    this.drawPoseLandmarks(results.poseLandmarks);
+                    
+                    // Analyze body posture
+                    const poseAnalysis = this.analyzeBodyPosture(results.poseLandmarks);
+                    this.currentAnalysis.pose = poseAnalysis;
+                    this.updatePoseDisplay();
+                } else {
+                    this.currentAnalysis.pose = { emotion: 'neutral', confidence: 0, posture: 'upright' };
+                }
+            }
+
+            analyzeFacialExpression(landmarks) {
+                // Advanced facial expression analysis
+                const eyeDistance = this.calculateEyeDistance(landmarks);
+                const mouthCurvature = this.calculateMouthCurvature(landmarks);
+                const browPosition = this.calculateBrowPosition(landmarks);
+                
+                let emotion = 'neutral';
+                let confidence = 0;
+                
+                // Simple emotion detection based on facial landmarks
+                if (mouthCurvature > 0.02) {
+                    emotion = 'happy';
+                    confidence = Math.min(mouthCurvature * 3000, 95);
+                } else if (mouthCurvature < -0.01) {
+                    emotion = 'sad';
+                    confidence = Math.min(Math.abs(mouthCurvature) * 3000, 90);
+                } else if (browPosition < -0.01) {
+                    emotion = 'angry';
+                    confidence = Math.min(Math.abs(browPosition) * 2000, 85);
+                } else if (eyeDistance > 0.05) {
+                    emotion = 'surprised';
+                    confidence = Math.min(eyeDistance * 1500, 80);
+                } else {
+                    emotion = 'neutral';
+                    confidence = 50;
+                }
+                
+                return { emotion, confidence };
+            }
+
+            calculateEyeDistance(landmarks) {
+                // Calculate distance between eye corners
+                const leftEye = landmarks[33];
+                const rightEye = landmarks[263];
+                return Math.abs(leftEye.y - rightEye.y);
+            }
+
+            calculateMouthCurvature(landmarks) {
+                // Calculate mouth curvature
+                const leftMouth = landmarks[61];
+                const rightMouth = landmarks[291];
+                const centerMouth = landmarks[13];
+                return (leftMouth.y + rightMouth.y) / 2 - centerMouth.y;
+            }
+
+            calculateBrowPosition(landmarks) {
+                // Calculate eyebrow position
+                const leftBrow = landmarks[70];
+                const rightBrow = landmarks[300];
+                const noseBridge = landmarks[9];
+                return (leftBrow.y + rightBrow.y) / 2 - noseBridge.y;
+            }
+
+            analyzeBodyPosture(landmarks) {
+                const shoulders = {
+                    left: landmarks[11],
+                    right: landmarks[12]
+                };
+                const arms = {
+                    leftElbow: landmarks[13],
+                    rightElbow: landmarks[14]
+                };
+                const hips = {
+                    left: landmarks[23],
+                    right: landmarks[24]
+                };
+                
+                let emotion = 'relaxed';
+                let confidence = 0;
+                let posture = 'upright';
+                
+                // Check for crossed arms
+                const armsCrossed = Math.abs(arms.leftElbow.x - arms.rightElbow.x) < 0.15;
+                if (armsCrossed) {
+                    emotion = 'defensive';
+                    confidence = 80;
+                    posture = 'defensive';
+                }
+                
+                // Check for slouched posture
+                const shoulderSlump = shoulders.left.y > hips.left.y * 0.85;
+                if (shoulderSlump) {
+                    emotion = 'withdrawn';
+                    confidence = 70;
+                    posture = 'slouched';
+                }
+                
+                // Check for open posture
+                const shoulderWidth = Math.abs(shoulders.left.x - shoulders.right.x);
+                if (shoulderWidth > 0.3) {
+                    emotion = 'confident';
+                    confidence = 85;
+                    posture = 'open';
+                }
+                
+                return { emotion, confidence, posture };
+            }
+
+            combineMultiModalAnalysis() {
+                const face = this.currentAnalysis.face;
+                const voice = this.currentAnalysis.voice;
+                const pose = this.currentAnalysis.pose;
+                
+                // Weight the different modalities
+                const faceWeight = 0.4;
+                const voiceWeight = this.isVoiceAnalysisActive ? 0.35 : 0;
+                const poseWeight = 0.25;
+                const remainingWeight = 1 - faceWeight - voiceWeight - poseWeight;
+                
+                // Calculate combined confidence
+                let combinedConfidence = (face.confidence * faceWeight) + 
+                                       (voice.confidence * voiceWeight) + 
+                                       (pose.confidence * poseWeight);
+                
+                // Calculate stress level
+                const stressIndicators = [
+                    voice.intensity > 70 ? 30 : 0,
+                    pose.posture === 'defensive' ? 25 : 0,
+                    face.emotion === 'angry' || face.emotion === 'fearful' ? 20 : 0
+                ];
+                const stressLevel = Math.min(stressIndicators.reduce((a, b) => a + b, 0), 100);
+                
+                // Calculate authenticity score
+                const authenticityFactors = [
+                    Math.abs(face.confidence - voice.confidence) < 20 ? 30 : 10,
+                    pose.emotion === 'open' || pose.emotion === 'confident' ? 25 : 15,
+                    face.confidence > 60 ? 25 : 10,
+                    this.isVoiceAnalysisActive ? 20 : 10
+                ];
+                const authenticityScore = Math.min(authenticityFactors.reduce((a, b) => a + b, 0), 100);
+                
+                // Determine dominant emotion
+                let dominantEmotion = face.emotion;
+                if (voice.confidence > face.confidence && this.isVoiceAnalysisActive) {
+                    dominantEmotion = this.mapVoiceToFaceEmotion(voice.emotion);
+                }
+                
+                this.currentAnalysis.combined = {
+                    emotion: dominantEmotion,
+                    confidence: combinedConfidence,
+                    stress: stressLevel,
+                    authenticity: authenticityScore
+                };
+                
+                this.updateAllDisplays();
+                this.updateBattery();
+                this.generateEmotionalText();
+                
+                // Store in history
+                this.analysisHistory.push({
+                    timestamp: new Date(),
+                    analysis: { ...this.currentAnalysis }
+                });
+                
+                this.updateStatus(`ניתוח הושלם! רגש: ${this.emotions[dominantEmotion].hebrew}`, 'success', combinedConfidence);
+            }
+
+            mapVoiceToFaceEmotion(voiceEmotion) {
+                const mapping = {
+                    'excited': 'happy',
+                    'tense': 'angry',
+                    'sad': 'sad',
+                    'calm': 'neutral',
+                    'energetic': 'happy'
+                };
+                return mapping[voiceEmotion] || 'neutral';
+            }
+
+            updateAllDisplays() {
+                this.updateFaceDisplay();
+                this.updateVoiceDisplay();
+                this.updatePoseDisplay();
+                this.updateCombinedDisplay();
+            }
+
+            updateFaceDisplay() {
+                const emotion = this.currentAnalysis.face.emotion;
+                const confidence = Math.round(this.currentAnalysis.face.confidence);
+                this.faceEmotion.textContent = `${this.emotions[emotion].emoji} ${confidence}%`;
+            }
+
+            updateVoiceDisplay() {
+                if (this.isVoiceAnalysisActive) {
+                    const emotion = this.currentAnalysis.voice.emotion;
+                    const confidence = Math.round(this.currentAnalysis.voice.confidence);
+                    this.voiceEmotion.textContent = `${this.voiceEmotions[emotion].emoji} ${confidence}%`;
+                } else {
+                    this.voiceEmotion.textContent = '🔇 --';
+                }
+            }
+
+            updatePoseDisplay() {
+                const emotion = this.currentAnalysis.pose.emotion;
+                const confidence = Math.round(this.currentAnalysis.pose.confidence);
+                this.poseEmotion.textContent = `${this.poseEmotions[emotion].emoji} ${confidence}%`;
+            }
+
+            updateCombinedDisplay() {
+                const combined = this.currentAnalysis.combined;
+                this.combinedConfidence.textContent = `${Math.round(combined.confidence)}%`;
+                this.stressLevel.textContent = `${Math.round(combined.stress)}%`;
+                this.authenticityScore.textContent = `${Math.round(combined.authenticity)}%`;
+                
+                // Update main emoji
+                this.currentEmoji.textContent = this.emotions[combined.emotion].emoji;
+            }
+
+            updateBattery() {
+                const combined = this.currentAnalysis.combined;
+                let batteryLevel = 50; // Base level
+                
+                // Adjust based on emotions
+                if (combined.emotion === 'happy' || combined.emotion === 'excited') {
+                    batteryLevel = Math.min(90, batteryLevel + 30);
+                } else if (combined.emotion === 'sad' || combined.emotion === 'angry') {
+                    batteryLevel = Math.max(10, batteryLevel - 20);
+                }
+                
+                // Adjust based on stress
+                batteryLevel = Math.max(10, batteryLevel - (combined.stress * 0.3));
+                
+                this.batteryFill.style.width = batteryLevel + '%';
+                
+                let batteryMessage = '';
+                if (batteryLevel > 70) {
+                    batteryMessage = 'אנרגיה גבוהה! אתה מלא חיות! ⚡';
+                } else if (batteryLevel > 40) {
+                    batteryMessage = 'רמת אנרגיה טובה, המשך כך 👍';
+                } else {
+                    batteryMessage = 'זמן להתרגע ולהירגע 😴';
+                }
+                
+                this.moodDisplay.textContent = batteryMessage;
+            }
+
+            generateEmotionalText() {
+                const combined = this.currentAnalysis.combined;
+                const emotion = this.emotions[combined.emotion];
+                const randomMessage = emotion.messages[Math.floor(Math.random() * emotion.messages.length)];
+                
+                let analysisText = `${emotion.emoji} ${randomMessage}\n\n`;
+                analysisText += `📊 ניתוח מולטי-מודאלי:\n`;
+                analysisText += `🎭 הבעת פנים: ${this.emotions[this.currentAnalysis.face.emotion].hebrew} (${Math.round(this.currentAnalysis.face.confidence)}%)\n`;
+                
+                if (this.isVoiceAnalysisActive) {
+                    analysisText += `🎤 טון קולי: ${this.voiceEmotions[this.currentAnalysis.voice.emotion].hebrew} (${Math.round(this.currentAnalysis.voice.confidence)}%)\n`;
+                }
+                
+                analysisText += `🤸 שפת גוף: ${this.poseEmotions[this.currentAnalysis.pose.emotion].hebrew} (${Math.round(this.currentAnalysis.pose.confidence)}%)\n`;
+                analysisText += `💯 דיוק כללי: ${Math.round(combined.confidence)}%\n`;
+                analysisText += `😰 רמת לחץ: ${Math.round(combined.stress)}%\n`;
+                analysisText += `✨ אמינות: ${Math.round(combined.authenticity)}%\n\n`;
+                analysisText += `⏰ ${new Date().toLocaleString('he-IL')}`;
+                
+                this.textArea.value = analysisText;
+            }
+
+            toggleContinuousMode() {
+                if (!this.isContinuousMode) {
+                    this.isContinuousMode = true;
+                    this.continuousBtn.textContent = '⏹️ עצור ניטור רציף';
+                    this.startContinuousAnalysis();
+                    this.updateStatus('מצב ניטור רציף פעיל! 🔄', 'analyzing', 90);
+                } else {
+                    this.isContinuousMode = false;
+                    this.continuousBtn.textContent = '🔄 מצב ניטור רציף מתקדם';
+                    this.updateStatus('ניטור רציף נעצר', 'ready', 60);
+                }
+            }
+
+            async startContinuousAnalysis() {
+                let frameCount = 0;
+                const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                const analyze = async () => {
+                    if (!this.isContinuousMode) return;
+                    
+                    // Frame skipping for performance
+                    if (frameCount % (isMobile ? 5 : 3) === 0) {
+                        await this.analyzeCurrentFrame();
+                    }
+                    frameCount++;
+                    requestAnimationFrame(analyze);
+                };
+                analyze();
+            }
+
+            drawFaceLandmarks(landmarks) {
+                const ctx = this.canvas.getContext('2d');
+                ctx.fillStyle = '#00f2fe';
+                
+                // Draw key facial landmarks
+                const keyPoints = [
+                    33, 263, // Eyes
+                    13, 14, // Mouth
+                    9, 10, // Nose
+                    21, 251 // Face outline
+                ];
+                
+                keyPoints.forEach(index => {
+                    if (landmarks[index]) {
+                        const x = landmarks[index].x * this.canvas.width;
+                        const y = landmarks[index].y * this.canvas.height;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 2, 0, 2 * Math.PI);
+                        ctx.fill();
+                    }
+                });
+            }
+
+            drawPoseLandmarks(landmarks) {
+                const ctx = this.poseCanvas.getContext('2d');
+                ctx.strokeStyle = '#f093fb';
+                ctx.lineWidth = 3;
+                
+                // Draw pose connections
+                const connections = [
+                    [11, 12], // Shoulders
+                    [11, 13], [13, 15], // Left arm
+                    [12, 14], [14, 16], // Right arm
+                    [11, 23], [12, 24], // Torso
+                    [23, 24] // Hips
+                ];
+                
+                connections.forEach(([start, end]) => {
+                    const startPoint = landmarks[start];
+                    const endPoint = landmarks[end];
+                    
+                    if (startPoint && endPoint && startPoint.visibility > 0.5 && endPoint.visibility > 0.5) {
+                        ctx.beginPath();
+                        ctx.moveTo(startPoint.x * this.poseCanvas.width, startPoint.y * this.poseCanvas.height);
+                        ctx.lineTo(endPoint.x * this.poseCanvas.width, endPoint.y * this.poseCanvas.height);
+                        ctx.stroke();
+                    }
+                });
+                
+                // Draw pose points
+                ctx.fillStyle = '#f093fb';
+                [11, 12, 13, 14, 15, 16, 23, 24].forEach(index => {
+                    const point = landmarks[index];
+                    if (point && point.visibility > 0.5) {
+                        ctx.beginPath();
+                        ctx.arc(point.x * this.poseCanvas.width, point.y * this.poseCanvas.height, 4, 0, 2 * Math.PI);
+                        ctx.fill();
+                    }
+                });
+            }
+
+            analyzeText() {
+                const text = this.textArea.value;
+                if (!text) return;
+                
+                // Simple sentiment analysis
+                const positiveWords = ['שמח', 'טוב', 'נהדר', 'מעולה', 'אוהב', 'מצוין'];
+                const negativeWords = ['עצוב', 'רע', 'נורא', 'שונא', 'גרוע', 'מדכא'];
+                
+                let sentiment = 0;
+                positiveWords.forEach(word => {
+                    if (text.includes(word)) sentiment += 1;
+                });
+                negativeWords.forEach(word => {
+                    if (text.includes(word)) sentiment -= 1;
+                });
+                
+                // Update text-based emotion
+                if (sentiment > 0) {
+                    this.currentAnalysis.text = { emotion: 'happy', confidence: Math.min(sentiment * 20, 80) };
+                } else if (sentiment < 0) {
+                    this.currentAnalysis.text = { emotion: 'sad', confidence: Math.min(Math.abs(sentiment) * 20, 80) };
+                } else {
+                    this.currentAnalysis.text = { emotion: 'neutral', confidence: 50 };
+                }
+            }
+
+            updateStatus(message, type, progress) {
+                this.statusElement.querySelector('.status-text').textContent = message;
+                this.statusElement.className = `status ${type}`;
+                
+                // Update progress bars
+                if (type === 'analyzing' || type === 'ready') {
+                    this.faceProgress.style.width = Math.min(progress, 100) + '%';
+                    if (this.isVoiceAnalysisActive) {
+                        this.voiceProgress.style.width = Math.min(progress, 100) + '%';
+                    }
+                    this.poseProgress.style.width = Math.min(progress - 10, 100) + '%';
+                }
+            }
+
+            createFloatingParticles() {
+                const particles = document.getElementById('particles');
+                const emojis = ['✨', '🎭', '🎤', '🤸‍♂️', '💫', '⭐', '🌟', '💖', '🦋', '🌈'];
+                
+                for (let i = 0; i < 15; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.top = Math.random() * 100 + '%';
+                    particle.style.animationDelay = Math.random() * 12 + 's';
+                    particle.style.animationDuration = (8 + Math.random() * 8) + 's';
+                    particles.appendChild(particle);
+                }
+            }
+        }
+
+        // Sharing functions
+        function shareToWhatsApp() {
+            const text = document.getElementById('textArea').value;
+            const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        }
+
+        function shareToInstagram() {
+            const text = document.getElementById('textArea').value;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('הטקסט הועתק! פתח את Instagram והדבק בסטורי 📸');
+            });
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('textArea').value;
+            navigator.clipboard.writeText(text).then(() => {
+                // Update button temporarily
+                event.target.textContent = '✅ הועתק!';
+                setTimeout(() => {
+                    event.target.textContent = '📋 העתק';
+                }, 2000);
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.getElementById('textArea');
+                textArea.select();
+                document.execCommand('copy');
+                event.target.textContent = '✅ הועתק!';
+                setTimeout(() => {
+                    event.target.textContent = '📋 העתק';
+                }, 2000);
+            });
+        }
+
+        // Initialize the app
+        let vibeCheckApp;
+        document.addEventListener('DOMContentLoaded', () => {
+            vibeCheckApp = new VibeCheckProMax();
+        });
+
+        // Error handling for media devices
+        window.addEventListener('error', (e) => {
+            console.error('Application error:', e.error);
+            if (vibeCheckApp) {
+                vibeCheckApp.updateStatus('שגיאה במערכת - רענן את הדף', 'error', 0);
+            }
+        });
+
+        // Handle page visibility for performance
+        document.addEventListener('visibilitychange', () => {
+            if (vibeCheckApp && document.hidden && vibeCheckApp.isContinuousMode) {
+                // Pause continuous analysis when page is hidden
+                vibeCheckApp.isContinuousMode = false;
+                vibeCheckApp.continuousBtn.textContent = '🔄 מצב ניטור רציף מתקדם';
+            }
+        });
+    </script>
+</body>
+</html>

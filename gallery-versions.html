@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 גלריית כל הגרסאות - VibeCheck Pro</title>
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #f093fb;
+            --success-color: #38ef7d;
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-glass: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --border-primary: rgba(255, 255, 255, 0.2);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.2);
+            --radius-lg: 16px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: var(--space-lg);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: var(--space-xl);
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: var(--space-md);
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FF69B4, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        .versions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: var(--space-lg);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .version-category {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-lg);
+            transition: transform 0.3s ease;
+        }
+
+        .version-category:hover {
+            transform: translateY(-4px);
+        }
+
+        .category-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: var(--space-md);
+            padding-bottom: var(--space-md);
+            border-bottom: 2px solid var(--border-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .category-icon {
+            font-size: 2rem;
+        }
+
+        .version-list {
+            list-style: none;
+        }
+
+        .version-item {
+            margin-bottom: var(--space-md);
+            padding: var(--space-md);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
+            transition: all 0.3s ease;
+        }
+
+        .version-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-4px);
+        }
+
+        .version-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .version-link:hover {
+            color: var(--accent-color);
+        }
+
+        .version-meta {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .version-size {
+            background: var(--success-color);
+            color: var(--bg-primary);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .stats-container {
+            margin-top: var(--space-xl);
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-lg);
+            margin-top: var(--space-lg);
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: var(--space-md);
+            border-radius: 8px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .back-button {
+            position: fixed;
+            top: var(--space-lg);
+            left: var(--space-lg);
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-md);
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-button:hover {
+            background: var(--accent-color);
+            color: var(--bg-primary);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .versions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">
+        ← חזור לדף הראשי
+    </a>
+
+    <div class="header">
+        <h1>🎭 גלריית כל הגרסאות</h1>
+        <p>כל הדפים והגרסאות השונות של מערכת זיהוי הרגשות</p>
+        
+        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+            <button class="nav-btn" onclick="goToHome()" style="background: linear-gradient(45deg, #4CAF50, #388E3C); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">
+                🏠 דף הבית הראשי
+            </button>
+            <button class="nav-btn" onclick="openResearchCenter()" style="background: linear-gradient(45deg, #9C27B0, #673AB7); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">
+                🔬 מרכז מחקר ופיתוח
+            </button>
+            <button class="nav-btn" onclick="goBack()" style="background: linear-gradient(45deg, #FF9800, #F57C00); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">
+                ⬅️ חזרה
+            </button>
+        </div>
+    </div>
+
+    <div class="versions-grid">
+        <!-- גרסה חדשה מתקדמת -->
+        <div class="version-category">
+            <div class="category-title">
+                <span class="category-icon">🚀</span>
+                גרסה חדשה מתקדמת
+            </div>
+            <ul class="version-list">
+                <li class="version-item">
+                    <a href="index.html" class="version-link">
+                        VibeCheck Pro 2025
+                        <span class="version-size">27KB</span>
+                    </a>
+                    <div class="version-meta">הגרסה החדשה והמתקדמת ביותר עם עיצוב Glass Morphism</div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- גרסאות קודמות -->
+        <div class="version-category">
+            <div class="category-title">
+                <span class="category-icon">📜</span>
+                גרסאות קודמות
+            </div>
+            <ul class="version-list">
+                <li class="version-item">
+                    <a href="emoji_camera_tool (12).html" class="version-link">
+                        גרסה 12 - מתקדמת
+                        <span class="version-size">61KB</span>
+                    </a>
+                    <div class="version-meta">גרסה מתקדמת עם תכונות רבות</div>
+                </li>
+                <li class="version-item">
+                    <a href="emoji_camera_tool (11).html" class="version-link">
+                        גרסה 11
+                        <span class="version-size">56KB</span>
+                    </a>
+                    <div class="version-meta">גרסה יציבה עם כל התכונות הבסיסיות</div>
+                </li>
+                <li class="version-item">
+                    <a href="גרסאות ישנות/emoji_camera_tool.html" class="version-link">
+                        הגרסה המקורית
+                        <span class="version-size">46KB</span>
+                    </a>
+                    <div class="version-meta">הגרסה הראשונה של הכלי</div>
+                </li>
+                <li class="version-item">
+                    <a href="גרסאות ישנות/emoji_camera_tool (10).html" class="version-link">
+                        גרסה 10
+                        <span class="version-size">46KB</span>
+                    </a>
+                    <div class="version-meta">גרסה מתקדמת מהתיקייה הישנה</div>
+                </li>
+                <li class="version-item">
+                    <a href="גרסאות ישנות/emoji_camera_tool (9).html" class="version-link">
+                        גרסה 9
+                        <span class="version-size">27KB</span>
+                    </a>
+                    <div class="version-meta">גרסה בינונית</div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- גרסאות טיפוליות -->
+        <div class="version-category">
+            <div class="category-title">
+                <span class="category-icon">🏥</span>
+                כלים טיפוליים
+            </div>
+            <ul class="version-list">
+                <li class="version-item">
+                    <a href="גרסאות טיפוליות/CBT Therapist Dashboard/cbt-dashboard.html" class="version-link">
+                        לוח בקרה CBT
+                        <span class="version-size">26KB</span>
+                    </a>
+                    <div class="version-meta">כלי למטפלים קוגניטיביים-התנהגותיים</div>
+                </li>
+                <li class="version-item">
+                    <a href="גרסאות טיפוליות/Patient Self Monitoring/patient-app.html" class="version-link">
+                        אפליקציית מטופל
+                        <span class="version-size">9KB</span>
+                    </a>
+                    <div class="version-meta">ניטור עצמי יומי למטופלים</div>
+                </li>
+                <li class="version-item">
+                    <a href="גרסאות טיפוליות/Group Therapy Facilitator/group-therapy.html" class="version-link">
+                        הנחיית קבוצות
+                        <span class="version-size">11KB</span>
+                    </a>
+                    <div class="version-meta">כלי להנחיית טיפול קבוצתי</div>
+                </li>
+                <li class="version-item">
+                    <a href="גרסאות טיפוליות/Trauma Assessment Tool/trauma-assessment.html" class="version-link">
+                        הערכת טראומה
+                        <span class="version-size">16KB</span>
+                    </a>
+                    <div class="version-meta">זיהוי וניתוח סימני טראומה</div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- גרסאות פיתוח -->
+        <div class="version-category">
+            <div class="category-title">
+                <span class="category-icon">🔧</span>
+                גרסאות פיתוח
+            </div>
+            <ul class="version-list">
+                <li class="version-item">
+                    <a href="גרסאות ישנות/emoji_camera_tool (8).html" class="version-link">
+                        גרסה 8
+                        <span class="version-size">28KB</span>
+                    </a>
+                    <div class="version-meta">גרסת פיתוח עם תכונות חדשות</div>
+                </li>
+                <li class="version-item">
+                    <a href="גרסאות ישנות/emoji_camera_tool (7).html" class="version-link">
+                        גרסה 7
+                        <span class="version-size">21KB</span>
+                    </a>
+                    <div class="version-meta">גרסה בסיסית</div>
+                </li>
+                <li class="version-item">
+                    <a href="גרסאות ישנות/emoji_camera_tool (6).html" class="version-link">
+                        גרסה 6
+                        <span class="version-size">21KB</span>
+                    </a>
+                    <div class="version-meta">שיפורים בממשק המשתמש</div>
+                </li>
+                <li class="version-item">
+                    <a href="גרסאות ישנות/emoji_camera_tool (5).html" class="version-link">
+                        גרסה 5
+                        <span class="version-size">18KB</span>
+                    </a>
+                    <div class="version-meta">גרסה קלה וזריזה</div>
+                </li>
+                <li class="version-item">
+                    <a href="גרסאות ישנות/emoji_camera_tool (1).html" class="version-link">
+                        גרסה ראשונה
+                        <span class="version-size">14KB</span>
+                    </a>
+                    <div class="version-meta">הגרסה הראשונה אי פעם</div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="stats-container">
+        <h2>📊 סטטיסטיקות פרויקט</h2>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">17</div>
+                <div class="stat-label">סך הכל גרסאות</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">4</div>
+                <div class="stat-label">כלים טיפוליים</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">13</div>
+                <div class="stat-label">גרסאות פיתוח</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">1</div>
+                <div class="stat-label">גרסה חדשה</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // נוטיפיקציות מקצועיות
+        function showNotification(message, type = 'info', duration = 3000) {
+            console.log(`📢 [${type.toUpperCase()}] ${message}`);
+            
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 10px;
+                color: white;
+                font-weight: 600;
+                z-index: 10000;
+                transform: translateX(400px);
+                transition: all 0.3s ease;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                max-width: 350px;
+            `;
+            
+            const colors = {
+                success: 'linear-gradient(45deg, #4CAF50, #45a049)',
+                error: 'linear-gradient(45deg, #f44336, #da190b)',
+                warning: 'linear-gradient(45deg, #ff9800, #e68900)',
+                info: 'linear-gradient(45deg, #2196F3, #1976D2)'
+            };
+            
+            notification.style.background = colors[type] || colors.info;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(400px)';
+                setTimeout(() => notification.remove(), 300);
+            }, duration);
+        }
+
+        // הוספת אנימציות חמות
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                console.log('🎭 מאתחל גלריית הגרסאות...');
+                showNotification('🎭 ברוך הבא לגלריית כל הגרסאות!', 'success');
+                
+                const versionItems = document.querySelectorAll('.version-item');
+                
+                versionItems.forEach((item, index) => {
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        item.style.transition = 'all 0.5s ease';
+                        item.style.opacity = '1';
+                        item.style.transform = 'translateY(0)';
+                    }, index * 100);
+                });
+                
+                // אפקט קליק משופר
+                versionItems.forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        try {
+                            const linkElement = this.querySelector('.version-link');
+                            const versionName = linkElement ? linkElement.textContent.trim() : 'גרסה לא ידועה';
+                            
+                            console.log(`🔗 לוחץ על גרסה: ${versionName}`);
+                            showNotification(`🔗 פותח: ${versionName}`, 'info', 2000);
+                            
+                            const ripple = document.createElement('div');
+                            ripple.style.position = 'absolute';
+                            ripple.style.width = '10px';
+                            ripple.style.height = '10px';
+                            ripple.style.background = 'rgba(255, 255, 255, 0.5)';
+                            ripple.style.borderRadius = '50%';
+                            ripple.style.transform = 'scale(0)';
+                            ripple.style.animation = 'ripple 0.6s linear';
+                            ripple.style.left = e.offsetX + 'px';
+                            ripple.style.top = e.offsetY + 'px';
+                            
+                            this.style.position = 'relative';
+                            this.appendChild(ripple);
+                            
+                            setTimeout(() => {
+                                ripple.remove();
+                            }, 600);
+                            
+                        } catch (error) {
+                            console.error('❌ שגיאה באפקט קליק:', error);
+                        }
+                    });
+                    
+                    // הוספת אפקט hover
+                    item.addEventListener('mouseenter', function() {
+                        this.style.transform = 'translateX(-8px) scale(1.02)';
+                    });
+                    
+                    item.addEventListener('mouseleave', function() {
+                        this.style.transform = 'translateX(0) scale(1)';
+                    });
+                });
+                
+                // הוספת קיצורי מקלדת
+                document.addEventListener('keydown', function(e) {
+                    if (e.ctrlKey) {
+                        switch(e.key) {
+                            case 'h':
+                                e.preventDefault();
+                                goToHome();
+                                break;
+                            case 'r':
+                                e.preventDefault();
+                                openResearchCenter();
+                                break;
+                            case 'b':
+                                e.preventDefault();
+                                goBack();
+                                break;
+                            case 't':
+                                e.preventDefault();
+                                testGallery();
+                                break;
+                        }
+                    }
+                });
+                
+                // ספירת גרסאות ועדכון סטטיסטיקות
+                updateStatistics();
+                
+                console.log('✅ גלריית הגרסאות הוקמה בהצלחה');
+                
+                // הצגת טיפים לשימוש
+                setTimeout(() => {
+                    showNotification('💡 טיפ: Ctrl+H לדף הבית, Ctrl+R למרכז מחקר, Ctrl+T לבדיקת מערכת', 'info', 5000);
+                }, 3000);
+                
+            } catch (error) {
+                console.error('❌ שגיאה באתחול גלריית הגרסאות:', error);
+                showNotification('❌ שגיאה באתחול הגלריה', 'error');
+            }
+        });
+        
+        function goToHome() {
+            try {
+                console.log('🏠 חוזר לדף הבית הראשי...');
+                if (confirm('האם ברצונך לחזור לדף הבית הראשי?')) {
+                    showNotification('🏠 מעביר לדף הבית הראשי...', 'info', 1500);
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                }
+            } catch (error) {
+                console.error('❌ שגיאה במעבר לדף הבית:', error);
+                showNotification('❌ שגיאה במעבר לדף הבית', 'error');
+            }
+        }
+        
+        function openResearchCenter() {
+            try {
+                console.log('🔬 פותח מרכז מחקר ופיתוח...');
+                if (confirm('האם ברצונך לעבור למרכז המחקר והפיתוח?')) {
+                    showNotification('🔬 מרכז המחקר והפיתוח נמצא בתיקייה: "מחקרים ופיתוחים חדשים"', 'info', 5000);
+                    console.log('🔬 מרכז מחקר: תיקייה "מחקרים ופיתוחים חדשים"');
+                    
+                    // אפקט ויזואלי
+                    document.body.style.filter = 'hue-rotate(45deg)';
+                    setTimeout(() => {
+                        document.body.style.filter = 'hue-rotate(0deg)';
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('❌ שגיאה בפתיחת מרכז מחקר:', error);
+                showNotification('❌ שגיאה בפתיחת מרכז המחקר', 'error');
+            }
+        }
+        
+        function goBack() {
+            try {
+                console.log('⬅️ חוזר לעמוד הקודם...');
+                if (window.history.length > 1) {
+                    showNotification('⬅️ חוזר לעמוד הקודם...', 'info', 1000);
+                    setTimeout(() => {
+                        window.history.back();
+                    }, 1000);
+                } else {
+                    goToHome();
+                }
+            } catch (error) {
+                console.error('❌ שגיאה בחזרה:', error);
+                goToHome();
+            }
+        }
+
+        function updateStatistics() {
+            try {
+                const versionItems = document.querySelectorAll('.version-item');
+                const therapeuticVersions = document.querySelectorAll('.version-category:nth-child(3) .version-item').length;
+                const oldVersions = document.querySelectorAll('.version-category:nth-child(2) .version-item').length;
+                const devVersions = document.querySelectorAll('.version-category:nth-child(4) .version-item').length;
+                
+                console.log(`📊 סטטיסטיקות גלריה:
+                    - סך הכל גרסאות: ${versionItems.length}
+                    - כלים טיפוליים: ${therapeuticVersions}
+                    - גרסאות קודמות: ${oldVersions}
+                    - גרסאות פיתוח: ${devVersions}`);
+                
+                // עדכון תצוגת הסטטיסטיקות
+                const statNumbers = document.querySelectorAll('.stat-number');
+                if (statNumbers.length >= 4) {
+                    statNumbers[0].textContent = versionItems.length;
+                    statNumbers[1].textContent = therapeuticVersions;
+                    statNumbers[2].textContent = oldVersions + devVersions;
+                    statNumbers[3].textContent = '1'; // גרסה חדשה
+                }
+                
+            } catch (error) {
+                console.error('❌ שגיאה בעדכון סטטיסטיקות:', error);
+            }
+        }
+
+        function testGallery() {
+            try {
+                console.log('🧪 מבצע בדיקת גלריה...');
+                
+                const categories = document.querySelectorAll('.version-category');
+                const totalVersions = document.querySelectorAll('.version-item').length;
+                const workingLinks = document.querySelectorAll('.version-link[href]').length;
+                
+                console.log(`🧪 תוצאות בדיקה:
+                    - קטגוריות: ${categories.length}
+                    - סך גרסאות: ${totalVersions}
+                    - לינקים פעילים: ${workingLinks}`);
+                
+                showNotification(`🧪 בדיקה הושלמה: ${totalVersions} גרסאות ב-${categories.length} קטגוריות`, 'success', 4000);
+                
+                // בדיקת נגישות לינקים
+                document.querySelectorAll('.version-link').forEach((link, index) => {
+                    const href = link.getAttribute('href');
+                    if (href) {
+                        console.log(`${index + 1}. ✅ ${link.textContent.trim()} -> ${href}`);
+                    } else {
+                        console.log(`${index + 1}. ❌ ${link.textContent.trim()} -> ללא קישור`);
+                    }
+                });
+                
+            } catch (error) {
+                console.error('❌ שגיאה בבדיקת גלריה:', error);
+                showNotification('❌ שגיאה בבדיקת הגלריה', 'error');
+            }
+        }
+
+        function searchVersions(searchTerm) {
+            try {
+                console.log(`🔍 מחפש גרסאות: "${searchTerm}"`);
+                
+                const versionItems = document.querySelectorAll('.version-item');
+                let foundCount = 0;
+                
+                versionItems.forEach(item => {
+                    const text = item.textContent.toLowerCase();
+                    const isMatch = text.includes(searchTerm.toLowerCase());
+                    
+                    if (isMatch) {
+                        item.style.display = 'block';
+                        item.style.background = 'rgba(76, 175, 80, 0.1)';
+                        foundCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                showNotification(`🔍 נמצאו ${foundCount} תוצאות עבור "${searchTerm}"`, foundCount > 0 ? 'success' : 'warning', 3000);
+                console.log(`🔍 נמצאו ${foundCount} תוצאות`);
+                
+                // איפוס החיפוש אחרי 10 שניות
+                setTimeout(() => {
+                    resetSearch();
+                }, 10000);
+                
+            } catch (error) {
+                console.error('❌ שגיאה בחיפוש:', error);
+                showNotification('❌ שגיאה בחיפוש', 'error');
+            }
+        }
+
+        function resetSearch() {
+            try {
+                const versionItems = document.querySelectorAll('.version-item');
+                versionItems.forEach(item => {
+                    item.style.display = 'block';
+                    item.style.background = '';
+                });
+                console.log('🔄 החיפוש אופס');
+            } catch (error) {
+                console.error('❌ שגיאה באיפוס חיפוש:', error);
+            }
+        }
+
+        function exportVersionsList() {
+            try {
+                console.log('📤 מייצא רשימת גרסאות...');
+                
+                const versions = [];
+                document.querySelectorAll('.version-item').forEach(item => {
+                    const link = item.querySelector('.version-link');
+                    const meta = item.querySelector('.version-meta');
+                    const size = item.querySelector('.version-size');
+                    
+                    if (link) {
+                        versions.push({
+                            name: link.textContent.trim(),
+                            href: link.getAttribute('href'),
+                            description: meta ? meta.textContent.trim() : '',
+                            size: size ? size.textContent.trim() : ''
+                        });
+                    }
+                });
+                
+                const exportData = {
+                    timestamp: new Date().toISOString(),
+                    totalVersions: versions.length,
+                    versions: versions
+                };
+                
+                console.log('📤 רשימת גרסאות:', exportData);
+                
+                // יצירת קובץ JSON להורדה (סימולציה)
+                const dataStr = JSON.stringify(exportData, null, 2);
+                showNotification(`📤 רשימה יוצאה: ${versions.length} גרסאות`, 'success', 3000);
+                
+                // שמירה ב-localStorage לגיבוי
+                localStorage.setItem('versionsExport', dataStr);
+                console.log('💾 רשימה נשמרה ב-localStorage');
+                
+            } catch (error) {
+                console.error('❌ שגיאה ביצוא רשימה:', error);
+                showNotification('❌ שגיאה ביצוא הרשימה', 'error');
+            }
+        }
+
+        // חשיפת פונקציות גלובליות לדיבאג
+        window.galleryDebug = {
+            goToHome,
+            openResearchCenter,
+            goBack,
+            updateStatistics,
+            testGallery,
+            searchVersions,
+            resetSearch,
+            exportVersionsList,
+            showNotification
+        };
+
+        // הוספת CSS לאנימציית הגלים
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+            
+            .nav-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            }
+            
+            .version-item {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            .version-item:hover {
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            }
+            
+            .version-category {
+                transition: all 0.3s ease;
+            }
+            
+            .version-category:hover {
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html> 

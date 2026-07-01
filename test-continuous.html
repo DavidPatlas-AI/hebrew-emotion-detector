@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת ניטור רציף וטקסט אוטומטי</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <style>
+        body {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(20px);
+        }
+        .test-button {
+            margin: 10px;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(145deg, #4CAF50, #388E3C);
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            font-family: 'Heebo', sans-serif;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+        }
+        .camera-box {
+            width: 100%;
+            height: 300px;
+            background: #000;
+            border-radius: 15px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+        }
+        .emotion-result {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .emotion-emoji {
+            font-size: 4rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 בדיקת ניטור רציף וטקסט אוטומטי</h1>
+        
+        <div style="display: flex; justify-content: center; gap: 10px; margin: 20px 0;">
+            <button onclick="goToHome()" style="background: linear-gradient(45deg, #4CAF50, #388E3C); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">
+                🏠 דף הבית הראשי
+            </button>
+            <button onclick="showAllVersions()" style="background: linear-gradient(45deg, #2196F3, #1976D2); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">
+                🏥 כל הגרסאות הטיפוליות
+            </button>
+            <button onclick="goBack()" style="background: linear-gradient(45deg, #FF9800, #F57C00); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">
+                ⬅️ חזרה
+            </button>
+        </div>
+        
+        <div class="camera-box" id="cameraBox">
+            📷 מצלמה (דמה לבדיקה)
+        </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="test-button" id="startCamera">🎥 הפעל מצלמה</button>
+            <button class="test-button" id="analyzeNow">🔍 נתח עכשיו</button>
+            <button class="test-button btn-continuous" id="continuousMode">🔄 מצב ניטור רציף</button>
+        </div>
+        
+        <div class="emotion-result" id="emotionResult">
+            <div class="emotion-emoji" id="currentEmotion">😐</div>
+            <div id="emotionName">נייטרלי</div>
+            <div id="confidenceText">80%</div>
+        </div>
+        
+        <div class="text-editor-section">
+            <h3>✨ עורך הטקסט האוטומטי</h3>
+            <div class="text-editor-container">
+                <textarea id="textEditor" placeholder="הטקסט שלך עם סמיילים מתאימים יופיע כאן..."></textarea>
+            </div>
+            <div class="editor-actions">
+                <button class="btn btn-small">📋 העתק</button>
+                <button class="btn btn-small">🗑️ נקה</button>
+                <button class="btn btn-small">📤 שתף</button>
+            </div>
+            
+            <!-- סטטוס מערכת -->
+            <div id="systemStatus"></div>
+        </div>
+    </div>
+
+    <!-- טעינת סקריפטים -->
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/emotion-analyzer.js"></script>
+    <script src="assets/js/camera-manager.js"></script>
+    <script src="assets/js/app.js"></script>
+    
+    <script>
+        // אתחול מהיר לבדיקה
+        let emotionAnalyzer = new EmotionAnalyzer();
+        let mockCameraManager = {
+            isActive: false,
+            continuousMode: false,
+            continuousInterval: null,
+            emotionHistory: [],
+            sessionStartTime: null,
+            
+            startCamera() {
+                this.isActive = true;
+                this.sessionStartTime = new Date();
+                this.emotionHistory = [];
+                document.getElementById('cameraBox').style.background = 'linear-gradient(45deg, #4CAF50, #8BC34A)';
+                document.getElementById('cameraBox').innerHTML = '📹 מצלמה פעילה!';
+                
+                // הודעת התחלת סשן
+                this.updateTextEditor({
+                    name: 'התחלת סשן',
+                    emoji: '🎬',
+                    confidence: 100,
+                    timestamp: new Date()
+                });
+                
+                Utils.showNotification('מצלמה הופעלה בהצלחה!', 'success');
+                return true;
+            },
+            
+            startContinuousAnalysis() {
+                if (!this.isActive) {
+                    Utils.showNotification('אנא הפעל את המצלמה תחילה', 'warning');
+                    return false;
+                }
+                
+                this.continuousMode = true;
+                this.continuousInterval = setInterval(() => {
+                    const analysis = emotionAnalyzer.analyze();
+                    displayEmotionResult(analysis);
+                    this.updateTextEditor(analysis);
+                }, 3000);
+                
+                Utils.showNotification('מצב ניטור רציף הופעל', 'success');
+                return true;
+            },
+            
+            stopContinuousAnalysis() {
+                this.continuousMode = false;
+                if (this.continuousInterval) {
+                    clearInterval(this.continuousInterval);
+                    this.continuousInterval = null;
+                }
+                Utils.showNotification('מצב ניטור רציף הופסק', 'info');
+            },
+            
+            updateTextEditor(emotion) {
+                const textEditor = document.getElementById('textEditor');
+                if (!textEditor) return;
+                
+                // הוספה להיסטוריה (רק רגשות אמיתיים)
+                if (emotion.name !== 'התחלת סשן' && emotion.name !== 'סיום סשן') {
+                    this.emotionHistory.push({
+                        ...emotion,
+                        timestamp: emotion.timestamp || new Date()
+                    });
+                }
+                
+                const emotionTexts = {
+                    'שמח': 'אני מרגיש נהדר היום! 😊 השמחה זורמת בי ואני מלא אנרגיה חיובית. ',
+                    'נלהב': 'איזה התלהבות! 😃 אני מלא רצון לעשות דברים חדשים ומעניינים! ',
+                    'רגוע': 'אני במצב של שלווה פנימית 😌 הכל זורם בקצב נעים ונינוח. ',
+                    'מהרהר': 'אני חושב עמוק על הדברים 🤔 הרעיונות מתגבשים לאט לאט. ',
+                    'נייטרלי': 'אני במצב רגוע ומאוזן 😐 פשוט נמצא כאן ברגע הזה. ',
+                    'מבולבל': 'יש לי הרבה מחשבות עכשיו 😕 אולי אצטרך זמן להבין מה קורה. ',
+                    'עצוב': 'יש לי רגשות כבדים עכשיו 😢 אולי אצטרך קצת תמיכה או זמן לעצמי. ',
+                    'מודאג': 'אני מרגיש קצת מתוח 😰 יש דברים שמדאיגים אותי עכשיו. ',
+                    'כועס': 'אני מרגיש מתוסכל ועצבני 😠 צריך זמן להירגע ולהשתחרר. ',
+                    'מופתע': 'ואו! לא ציפיתי לזה! 😲 איזה הפתעה מעניינת! ',
+                    'עייף': 'אני מרגיש די מותש עכשיו 😴 זה הזמן לקצת מנוחה. ',
+                    'חמים': 'אני מרגיש חם ואוהב 🤗 יש לי רצון לחבק את העולם! ',
+                    'התחלת סשן': '🎬 החל סשן חדש של ניתוח רגשות! ✨',
+                    'סיום סשן': '🏁 סשן הניתוח הסתיים. '
+                };
+                
+                const emotionText = emotionTexts[emotion.name] || `אני מרגיש ${emotion.name} עכשיו ${emotion.emoji} `;
+                const timestamp = emotion.timestamp ? 
+                    emotion.timestamp.toLocaleTimeString('he-IL') : 
+                    new Date().toLocaleTimeString('he-IL');
+                const confidenceText = emotion.confidence ? `(ביטחון: ${Math.round(emotion.confidence)}%)` : '';
+                
+                const currentText = textEditor.value;
+                const newText = `${timestamp} - ${emotionText}${confidenceText}\n${currentText}`;
+                
+                textEditor.value = newText;
+                
+                // אפקט ויזואלי משופר
+                const color = emotion.color || this.getEmotionColor(emotion.name);
+                textEditor.style.borderColor = color;
+                textEditor.style.boxShadow = `0 0 15px ${color}40`;
+                textEditor.style.transform = 'scale(1.02)';
+                
+                setTimeout(() => {
+                    textEditor.style.borderColor = '';
+                    textEditor.style.boxShadow = '';
+                    textEditor.style.transform = 'scale(1)';
+                }, 1000);
+                
+                // עדכון מטריקות
+                this.updateEmotionMetrics();
+                
+                // הוספת כפתור סיכום אם יש מספיק רגשות
+                if (this.emotionHistory.length >= 3) {
+                    this.showSummaryButton();
+                }
+            },
+            
+            getEmotionColor(emotionName) {
+                const colors = {
+                    'שמח': '#4CAF50',
+                    'נלהב': '#FF9800', 
+                    'רגוע': '#2196F3',
+                    'מהרהר': '#9C27B0',
+                    'נייטרלי': '#607D8B',
+                    'מבולבל': '#FFC107',
+                    'עצוב': '#3F51B5',
+                    'מודאג': '#FF5722',
+                    'כועס': '#F44336',
+                    'מופתע': '#E91E63',
+                    'עייף': '#795548',
+                    'חמים': '#E91E63',
+                    'התחלת סשן': '#4CAF50',
+                    'סיום סשן': '#FF9800'
+                };
+                return colors[emotionName] || '#4ECDC4';
+            },
+            
+            updateEmotionMetrics() {
+                if (this.emotionHistory.length === 0) return;
+                
+                const emotions = this.emotionHistory.map(e => e.name);
+                const emotionCounts = {};
+                emotions.forEach(emotion => {
+                    emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1;
+                });
+                
+                const mostCommonEmotion = Object.keys(emotionCounts)
+                    .reduce((a, b) => emotionCounts[a] > emotionCounts[b] ? a : b);
+                
+                const avgConfidence = this.emotionHistory
+                    .reduce((sum, e) => sum + (e.confidence || 0), 0) / this.emotionHistory.length;
+                
+                const statusElement = document.getElementById('systemStatus');
+                if (statusElement) {
+                    statusElement.textContent = `רגש דומיננטי: ${mostCommonEmotion} | ביטחון ממוצע: ${Math.round(avgConfidence)}% | רגשות: ${this.emotionHistory.length}`;
+                }
+            },
+            
+            showSummaryButton() {
+                if (document.getElementById('summaryBtn')) return;
+                
+                const editorActions = document.querySelector('.editor-actions');
+                if (!editorActions) return;
+                
+                const summaryBtn = document.createElement('button');
+                summaryBtn.id = 'summaryBtn';
+                summaryBtn.className = 'btn btn-small btn-summary';
+                summaryBtn.innerHTML = '📊 צור סיכום';
+                summaryBtn.onclick = () => this.generateSessionSummary();
+                
+                editorActions.appendChild(summaryBtn);
+                
+                setTimeout(() => {
+                    summaryBtn.style.transition = 'all 0.3s ease';
+                    summaryBtn.style.opacity = '1';
+                    summaryBtn.style.transform = 'scale(1)';
+                }, 100);
+            },
+            
+            generateSessionSummary() {
+                if (this.emotionHistory.length === 0) {
+                    Utils.showNotification('אין רגשות לסיכום', 'warning');
+                    return;
+                }
+                
+                const textEditor = document.getElementById('textEditor');
+                if (!textEditor) return;
+                
+                const emotions = this.emotionHistory.map(e => e.name);
+                const emotionCounts = {};
+                emotions.forEach(emotion => {
+                    emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1;
+                });
+                
+                const sortedEmotions = Object.entries(emotionCounts)
+                    .sort(([,a], [,b]) => b - a)
+                    .slice(0, 3);
+                
+                const totalEmotions = this.emotionHistory.length;
+                const avgConfidence = this.emotionHistory
+                    .reduce((sum, e) => sum + (e.confidence || 0), 0) / totalEmotions;
+                
+                const sessionDuration = this.sessionStartTime ? 
+                    Math.round((new Date() - this.sessionStartTime) / 1000 / 60) : 0;
+                
+                const summaryText = `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 סיכום סשן בדיקה - ${new Date().toLocaleDateString('he-IL')}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⏱️ פרטי הסשן:
+• זמן סשן: ${sessionDuration} דקות
+• סך הכל רגשות שזוהו: ${totalEmotions}
+• ביטחון ממוצע: ${Math.round(avgConfidence)}%
+
+🎭 הרגשות השכיחים ביותר:
+${sortedEmotions.map(([emotion, count], index) => {
+    const percentage = Math.round((count / totalEmotions) * 100);
+    return `${index + 1}. ${emotion} - ${count} פעמים (${percentage}%)`;
+}).join('\n')}
+
+🧪 מצב בדיקה: כל הפונקציות פועלות כצפוי!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 סיכום זה נוצר אוטומטי על ידי VibeCheck Pro 2025
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+`;
+                
+                const currentText = textEditor.value;
+                textEditor.value = summaryText + currentText;
+                
+                textEditor.style.background = 'linear-gradient(135deg, #667eea20, #764ba220)';
+                textEditor.style.borderColor = '#4CAF50';
+                textEditor.style.boxShadow = '0 0 20px #4CAF5040';
+                
+                setTimeout(() => {
+                    textEditor.style.background = '';
+                    textEditor.style.borderColor = '';
+                    textEditor.style.boxShadow = '';
+                }, 3000);
+                
+                Utils.showNotification('סיכום הסשן נוצר בהצלחה! 📊', 'success', 3000);
+                textEditor.scrollTop = 0;
+            }
+        };
+        
+        function displayEmotionResult(emotion) {
+            document.getElementById('currentEmotion').textContent = emotion.emoji;
+            document.getElementById('emotionName').textContent = emotion.name;
+            document.getElementById('confidenceText').textContent = `${Math.round(emotion.confidence)}%`;
+        }
+        
+        // מאזינים
+        document.getElementById('startCamera').addEventListener('click', () => {
+            mockCameraManager.startCamera();
+        });
+        
+        document.getElementById('analyzeNow').addEventListener('click', () => {
+            if (!mockCameraManager.isActive) {
+                Utils.showNotification('אנא הפעל את המצלמה תחילה', 'warning');
+                return;
+            }
+            const analysis = emotionAnalyzer.analyze();
+            displayEmotionResult(analysis);
+            mockCameraManager.updateTextEditor(analysis);
+        });
+        
+        document.getElementById('continuousMode').addEventListener('click', () => {
+            const btn = document.getElementById('continuousMode');
+            
+            if (mockCameraManager.continuousMode) {
+                mockCameraManager.stopContinuousAnalysis();
+                btn.textContent = '🔄 מצב ניטור רציף';
+                btn.classList.remove('active');
+            } else {
+                if (mockCameraManager.startContinuousAnalysis()) {
+                    btn.textContent = '⏹️ עצור ניטור';
+                    btn.classList.add('active');
+                }
+            }
+        });
+        
+        function goToHome() {
+            if (confirm('האם ברצונך לחזור לדף הבית הראשי?')) {
+                window.location.href = 'index.html';
+            }
+        }
+        
+        function showAllVersions() {
+            window.location.href = 'gallery-versions.html';
+        }
+        
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                goToHome();
+            }
+        }
+        
+        console.log('🧪 בדיקת ניטור רציף מוכנה!');
+    </script>
+</body>
+</html> 
